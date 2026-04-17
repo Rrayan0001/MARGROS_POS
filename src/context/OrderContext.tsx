@@ -70,9 +70,10 @@ export function OrderProvider({ children }: { children: ReactNode }) {
   });
 
   const fetchStats = useCallback(async () => {
-    if (!user?.restaurantId) return;
+    if (!user) return;
     try {
-      const res = await fetch(`/api/reports?restaurantId=${user.restaurantId}`);
+      // No restaurantId in URL — middleware injects it from the session cookie
+      const res = await fetch("/api/reports");
       if (!res.ok) return;
       const data = await res.json();
       setStats({
@@ -86,13 +87,13 @@ export function OrderProvider({ children }: { children: ReactNode }) {
     } catch (err) {
       console.error("OrderContext stats error:", err);
     }
-  }, [user?.restaurantId]);
+  }, [user]);
 
   const fetchOrders = useCallback(async () => {
-    if (!user?.restaurantId) return;
+    if (!user) return;
     setIsLoading(true);
     try {
-      const res = await fetch(`/api/orders?restaurantId=${user.restaurantId}&limit=50`);
+      const res = await fetch("/api/orders?limit=50");
       if (!res.ok) throw new Error("Failed to fetch orders");
       const { orders: data } = await res.json();
       setOrders(data.map((o: Record<string, unknown>) => ({
@@ -113,7 +114,7 @@ export function OrderProvider({ children }: { children: ReactNode }) {
     } finally {
       setIsLoading(false);
     }
-  }, [user?.restaurantId]);
+  }, [user]);
 
   useEffect(() => {
     fetchOrders();
@@ -128,16 +129,13 @@ export function OrderProvider({ children }: { children: ReactNode }) {
     total: number;
     paymentMethod: string;
   }): Promise<Order> => {
-    if (!user?.restaurantId) throw new Error("Not authenticated");
+    if (!user) throw new Error("Not authenticated");
 
     const res = await fetch("/api/orders", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        restaurantId: user.restaurantId,
-        cashierName:  user.name,
-        ...orderData,
-      }),
+      // cashierName and restaurantId come from the server-side session now
+      body: JSON.stringify(orderData),
     });
     if (!res.ok) throw new Error("Failed to create order");
     const { order: raw } = await res.json();
@@ -157,7 +155,6 @@ export function OrderProvider({ children }: { children: ReactNode }) {
     };
 
     setOrders((prev) => [order, ...prev]);
-    // Refresh stats after new order
     fetchStats();
     return order;
   }, [user, fetchStats]);

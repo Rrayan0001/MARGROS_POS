@@ -15,7 +15,6 @@ import {
   ShieldCheck,
   Sun,
   Moon,
-  Bell,
 } from "@phosphor-icons/react";
 import { useAuth } from "@/context/AuthContext";
 
@@ -203,19 +202,6 @@ export default function Sidebar({ collapsed }: SidebarProps) {
           {!collapsed && <span>{dark ? "Light Mode" : "Dark Mode"}</span>}
         </button>
 
-        <div style={{ position: "relative" }}>
-          <button title="Notifications"
-            style={{ display: "flex", alignItems: "center", gap: 11, padding: collapsed ? "10px 0" : "10px 12px", borderRadius: 10, background: "transparent", border: "none", cursor: "pointer", color: "var(--gray)", fontFamily: "var(--font-body)", fontSize: 13.5, fontWeight: 500, width: "100%", transition: "all 0.15s ease", whiteSpace: "nowrap", justifyContent: collapsed ? "center" : "flex-start" }}
-            onMouseEnter={(e) => { e.currentTarget.style.background = "var(--gray-lighter)"; e.currentTarget.style.color = "var(--charcoal)"; }}
-            onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "var(--gray)"; }}
-          >
-            <span style={{ flexShrink: 0, display: "flex", position: "relative" }}>
-              <Bell size={20} weight="regular" />
-              <span style={{ position: "absolute", top: -4, right: -4, width: 14, height: 14, borderRadius: "50%", background: "var(--primary)", color: "white", fontSize: 8, fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center", border: "2px solid var(--white)" }}>3</span>
-            </span>
-            {!collapsed && <span style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "space-between" }}>Notifications<span style={{ background: "var(--primary)", color: "white", borderRadius: 10, padding: "1px 7px", fontSize: 10, fontWeight: 800 }}>3</span></span>}
-          </button>
-        </div>
       </div>
 
       {/* DIVIDER */}

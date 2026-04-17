@@ -1,25 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase";
 
-// GET /api/reports?restaurantId=xxx
 export async function GET(req: NextRequest) {
   try {
-    const restaurantId = req.nextUrl.searchParams.get("restaurantId");
+    const restaurantId = req.headers.get("x-restaurant-id");
     if (!restaurantId) {
-      return NextResponse.json({ error: "restaurantId required" }, { status: 400 });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const supabase = createServiceClient();
     const now = new Date();
 
-    // Today's date range
     const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
     const todayEnd   = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1).toISOString();
-
-    // Month date range
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-
-    // Last 30 days for chart
     const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
 
     const [todayRes, monthRes, recentRes, allItemsRes] = await Promise.all([
@@ -43,20 +37,22 @@ export async function GET(req: NextRequest) {
         .select("*, order_items(*)")
         .eq("restaurant_id", restaurantId)
         .gte("created_at", thirtyDaysAgo)
-        .order("created_at", { ascending: false }),
+        .order("created_at", { ascending: false })
+        .limit(100),
 
+      // Scoped to restaurant via orders join, with a date filter to prevent unbounded scans
       supabase
         .from("order_items")
-        .select("name, qty, order_id, orders!inner(restaurant_id)")
-        .eq("orders.restaurant_id", restaurantId),
+        .select("name, qty, orders!inner(restaurant_id, created_at)")
+        .eq("orders.restaurant_id", restaurantId)
+        .gte("orders.created_at", thirtyDaysAgo),
     ]);
 
-    const todaySales    = (todayRes.data ?? []).reduce((s, o) => s + Number(o.total), 0);
+    const todaySales     = (todayRes.data ?? []).reduce((s, o) => s + Number(o.total), 0);
     const monthlyRevenue = (monthRes.data ?? []).reduce((s, o) => s + Number(o.total), 0);
-    const totalOrders   = (monthRes.data ?? []).length;
-    const avgOrderValue = totalOrders > 0 ? Math.round(monthlyRevenue / totalOrders) : 0;
+    const totalOrders    = (monthRes.data ?? []).length;
+    const avgOrderValue  = totalOrders > 0 ? Math.round(monthlyRevenue / totalOrders) : 0;
 
-    // Top selling item
     const itemCounts: Record<string, number> = {};
     (allItemsRes.data ?? []).forEach((i) => {
       itemCounts[i.name] = (itemCounts[i.name] ?? 0) + i.qty;

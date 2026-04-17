@@ -21,9 +21,10 @@ export interface User {
 
 interface AuthContextType {
   user: User | null;
-  login: (email: string, password: string) => Promise<boolean>;
-  signup: (data: SignupData) => Promise<boolean>;
-  logout: () => void;
+  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  signup: (data: SignupData) => Promise<{ otpSent: boolean; error?: string }>;
+  verifySignupOtp: (email: string, token: string, data: SignupData) => Promise<{ success: boolean; error?: string }>;
+  logout: () => Promise<void>;
   isLoading: boolean;
 }
 
@@ -39,59 +40,82 @@ const AuthContext = createContext<AuthContextType | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const router = useRouter();
 
+  // On mount, restore session from the httpOnly cookie via /api/auth/me
   useEffect(() => {
-    const stored = localStorage.getItem("margros_user");
-    if (stored) {
-      try { setUser(JSON.parse(stored)); } catch { /* ignore */ }
-    }
-    setIsLoading(false);
+    fetch("/api/auth/me")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => { if (data?.user) setUser(data.user); })
+      .catch(() => {})
+      .finally(() => setIsLoading(false));
   }, []);
 
-  const login = useCallback(async (email: string, password: string): Promise<boolean> => {
+  const login = useCallback(async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
     try {
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
-      if (!res.ok) return false;
-      const { user: u } = await res.json();
-      setUser(u);
-      localStorage.setItem("margros_user", JSON.stringify(u));
-      return true;
+      const json = await res.json();
+      if (!res.ok) return { success: false, error: json.error ?? "Login failed" };
+      setUser(json.user);
+      return { success: true };
     } catch {
-      return false;
+      return { success: false, error: "Something went wrong" };
     }
   }, []);
 
-  const signup = useCallback(async (data: SignupData): Promise<boolean> => {
+  const signup = useCallback(async (data: SignupData): Promise<{ otpSent: boolean; error?: string }> => {
     try {
       const res = await fetch("/api/auth/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
-      if (!res.ok) return false;
-      const { user: u } = await res.json();
-      setUser(u);
-      localStorage.setItem("margros_user", JSON.stringify(u));
-      return true;
+      const json = await res.json();
+      if (!res.ok) return { otpSent: false, error: json.error ?? "Signup failed" };
+      return { otpSent: true };
     } catch {
-      return false;
+      return { otpSent: false, error: "Something went wrong" };
     }
   }, []);
 
-  const router = useRouter();
+  const verifySignupOtp = useCallback(async (
+    email: string,
+    token: string,
+    data: SignupData
+  ): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const res = await fetch("/api/auth/verify-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email,
+          token,
+          restaurantName: data.restaurantName,
+          ownerName: data.ownerName,
+          password: data.password,
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok) return { success: false, error: json.error ?? "Verification failed" };
+      setUser(json.user);
+      return { success: true };
+    } catch {
+      return { success: false, error: "Something went wrong" };
+    }
+  }, []);
 
-  const logout = useCallback(() => {
+  const logout = useCallback(async () => {
+    await fetch("/api/auth/logout", { method: "POST" });
     setUser(null);
-    localStorage.removeItem("margros_user");
     router.push("/");
   }, [router]);
 
   return (
-    <AuthContext.Provider value={{ user, login, signup, logout, isLoading }}>
+    <AuthContext.Provider value={{ user, login, signup, verifySignupOtp, logout, isLoading }}>
       {children}
     </AuthContext.Provider>
   );

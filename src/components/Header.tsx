@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Bell, Sun, Moon } from "@phosphor-icons/react";
+import { Sun, Moon } from "@phosphor-icons/react";
 import { useAuth } from "@/context/AuthContext";
 
 interface HeaderProps {
@@ -55,13 +55,7 @@ export default function Header({ title, subtitle }: HeaderProps) {
           {dark ? <Sun size={18} weight="fill" color="var(--primary)" /> : <Moon size={18} weight="regular" />}
         </button>
 
-        <button className="header-icon-btn notif-btn" title="Notifications">
-          <Bell size={18} weight="regular" />
-          <span className="notif-dot" />
-          <span className="notif-badge">3</span>
-        </button>
-
-        {user && (
+{user && (
           <div className="header-avatar-wrap">
             <div
               className="avatar"

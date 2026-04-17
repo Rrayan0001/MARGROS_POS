@@ -1,12 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase";
 
-// GET /api/menu?restaurantId=xxx
+function getRestaurantId(req: NextRequest): string | null {
+  return req.headers.get("x-restaurant-id");
+}
+
 export async function GET(req: NextRequest) {
   try {
-    const restaurantId = req.nextUrl.searchParams.get("restaurantId");
+    const restaurantId = getRestaurantId(req);
     if (!restaurantId) {
-      return NextResponse.json({ error: "restaurantId required" }, { status: 400 });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const supabase = createServiceClient();
@@ -25,12 +28,16 @@ export async function GET(req: NextRequest) {
   }
 }
 
-// POST /api/menu — create item
 export async function POST(req: NextRequest) {
   try {
+    const restaurantId = getRestaurantId(req);
+    if (!restaurantId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const body = await req.json();
-    const { restaurantId, name, category, price, tax, description, image, available, variants } = body;
-    if (!restaurantId || !name || !category || price == null) {
+    const { name, category, price, tax, description, image, available, variants } = body;
+    if (!name || !category || price == null) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
@@ -59,22 +66,33 @@ export async function POST(req: NextRequest) {
   }
 }
 
-// PUT /api/menu — update item
 export async function PUT(req: NextRequest) {
   try {
+    const restaurantId = getRestaurantId(req);
+    if (!restaurantId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const body = await req.json();
     const { id, ...updates } = body;
     if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
 
+    // Prevent callers from overriding the tenant
+    delete updates.restaurant_id;
+
     const supabase = createServiceClient();
+
+    // Scoped update — only modifies if item belongs to this restaurant
     const { data, error } = await supabase
       .from("menu_items")
       .update({ ...updates, updated_at: new Date().toISOString() })
       .eq("id", id)
+      .eq("restaurant_id", restaurantId)
       .select()
       .single();
 
     if (error) throw error;
+    if (!data) return NextResponse.json({ error: "Item not found" }, { status: 404 });
     return NextResponse.json({ item: data });
   } catch (err) {
     console.error("PUT /api/menu error:", err);
@@ -82,14 +100,25 @@ export async function PUT(req: NextRequest) {
   }
 }
 
-// DELETE /api/menu?id=xxx
 export async function DELETE(req: NextRequest) {
   try {
+    const restaurantId = getRestaurantId(req);
+    if (!restaurantId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const id = req.nextUrl.searchParams.get("id");
     if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
 
     const supabase = createServiceClient();
-    const { error } = await supabase.from("menu_items").delete().eq("id", id);
+
+    // Scoped delete — only deletes if item belongs to this restaurant
+    const { error } = await supabase
+      .from("menu_items")
+      .delete()
+      .eq("id", id)
+      .eq("restaurant_id", restaurantId);
+
     if (error) throw error;
     return NextResponse.json({ success: true });
   } catch (err) {

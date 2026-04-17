@@ -7,8 +7,6 @@ import { MenuProvider } from "@/context/MenuContext";
 import { OrderProvider, useOrders } from "@/context/OrderContext";
 import { ToastProvider } from "@/components/Toast";
 import {
-  TrendUp,
-  TrendDown,
   DownloadSimple,
   ChartLine,
   ChartBar,
@@ -60,8 +58,22 @@ function ReportsContent() {
       });
       return {
         labels: hours,
-        revenueData: hours.map(() => Math.floor(Math.random() * 4000 + 500)),
-        orderData: hours.map(() => Math.floor(Math.random() * 8 + 1)),
+        revenueData: hours.map((label) => {
+          const hr = parseInt(label);
+          return orders
+            .filter((o) => {
+              const d = new Date(o.createdAt);
+              return d.toDateString() === today.toDateString() && d.getHours() === hr;
+            })
+            .reduce((s, o) => s + o.total, 0);
+        }),
+        orderData: hours.map((label) => {
+          const hr = parseInt(label);
+          return orders.filter((o) => {
+            const d = new Date(o.createdAt);
+            return d.toDateString() === today.toDateString() && d.getHours() === hr;
+          }).length;
+        }),
       };
     }
     if (period === "weekly") {
@@ -90,11 +102,30 @@ function ReportsContent() {
         orderData: days.filter((_, i) => i % 3 === 0).map((day) => orders.filter((o) => new Date(o.createdAt).toLocaleDateString("en-IN", { day: "2-digit", month: "short" }) === day).length),
       };
     }
-    const weeks = Array.from({ length: 12 }, (_, i) => `W${12 - i}`).reverse();
+    // Quarterly: last 12 weeks of real data
+    const weeks = Array.from({ length: 12 }, (_, i) => {
+      const start = new Date(today);
+      start.setDate(start.getDate() - (11 - i) * 7);
+      return start.toLocaleDateString("en-IN", { day: "2-digit", month: "short" });
+    });
     return {
-      labels: weeks,
-      revenueData: weeks.map(() => Math.floor(Math.random() * 80000 + 30000)),
-      orderData: weeks.map(() => Math.floor(Math.random() * 150 + 50)),
+      labels: weeks.map((_, i) => `W${i + 1}`),
+      revenueData: weeks.map((_, i) => {
+        const weekStart = new Date(today);
+        weekStart.setDate(weekStart.getDate() - (11 - i) * 7);
+        const weekEnd = new Date(weekStart);
+        weekEnd.setDate(weekEnd.getDate() + 7);
+        return orders
+          .filter((o) => { const d = new Date(o.createdAt); return d >= weekStart && d < weekEnd; })
+          .reduce((s, o) => s + o.total, 0);
+      }),
+      orderData: weeks.map((_, i) => {
+        const weekStart = new Date(today);
+        weekStart.setDate(weekStart.getDate() - (11 - i) * 7);
+        const weekEnd = new Date(weekStart);
+        weekEnd.setDate(weekEnd.getDate() + 7);
+        return orders.filter((o) => { const d = new Date(o.createdAt); return d >= weekStart && d < weekEnd; }).length;
+      }),
     };
   }, [period, orders]);
 
@@ -142,10 +173,10 @@ function ReportsContent() {
   };
 
   const summaryKPIs = [
-    { label: "Period Revenue", value: `₹${totalRevenue.toLocaleString("en-IN")}`, icon: <CurrencyInr size={24} weight="fill" />, color: "#F26A21", bg: "linear-gradient(135deg, rgba(242,106,33,0.15), rgba(242,106,33,0.05))", border: "rgba(242,106,33,0.2)", trend: "+8.2%" },
-    { label: "Orders", value: totalOrders.toString(), icon: <ShoppingCart size={24} weight="fill" />, color: "#4CAF50", bg: "linear-gradient(135deg, rgba(76,175,80,0.15), rgba(76,175,80,0.05))", border: "rgba(76,175,80,0.2)", trend: "+5.1%" },
-    { label: "Avg Order", value: `₹${avgOrder}`, icon: <Calculator size={24} weight="fill" />, color: "#7C3AED", bg: "linear-gradient(135deg, rgba(124,58,237,0.15), rgba(124,58,237,0.05))", border: "rgba(124,58,237,0.2)", trend: "+2.3%" },
-    { label: "Monthly Total", value: `₹${monthlyRevenue.toLocaleString("en-IN")}`, icon: <CalendarBlank size={24} weight="fill" />, color: "#0891B2", bg: "linear-gradient(135deg, rgba(8,145,178,0.15), rgba(8,145,178,0.05))", border: "rgba(8,145,178,0.2)", trend: "+11%" },
+    { label: "Period Revenue", value: `₹${totalRevenue.toLocaleString("en-IN")}`, icon: <CurrencyInr size={24} weight="fill" />, color: "#F26A21", bg: "linear-gradient(135deg, rgba(242,106,33,0.15), rgba(242,106,33,0.05))", border: "rgba(242,106,33,0.2)" },
+    { label: "Orders", value: totalOrders.toString(), icon: <ShoppingCart size={24} weight="fill" />, color: "#4CAF50", bg: "linear-gradient(135deg, rgba(76,175,80,0.15), rgba(76,175,80,0.05))", border: "rgba(76,175,80,0.2)" },
+    { label: "Avg Order", value: `₹${avgOrder}`, icon: <Calculator size={24} weight="fill" />, color: "#7C3AED", bg: "linear-gradient(135deg, rgba(124,58,237,0.15), rgba(124,58,237,0.05))", border: "rgba(124,58,237,0.2)" },
+    { label: "Monthly Total", value: `₹${monthlyRevenue.toLocaleString("en-IN")}`, icon: <CalendarBlank size={24} weight="fill" />, color: "#0891B2", bg: "linear-gradient(135deg, rgba(8,145,178,0.15), rgba(8,145,178,0.05))", border: "rgba(8,145,178,0.2)" },
   ];
 
   return (
@@ -173,13 +204,8 @@ function ReportsContent() {
             className="kpi-card"
             style={{ animationDelay: `${i * 60}ms`, background: k.bg, border: `1.5px solid ${k.border}`, boxShadow: "none" }}
           >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-              <div style={{ width: 48, height: 48, borderRadius: 14, background: "var(--white)", display: "flex", alignItems: "center", justifyContent: "center", color: k.color, boxShadow: `0 4px 12px ${k.color}25`, border: `1px solid ${k.border}` }}>
-                {k.icon}
-              </div>
-              <span style={{ display: "flex", alignItems: "center", gap: 3, fontSize: 11, fontWeight: 700, color: "var(--secondary)", background: "rgba(76,175,80,0.1)", padding: "3px 8px", borderRadius: 100 }}>
-                <TrendUp size={12} weight="bold" /> {k.trend}
-              </span>
+            <div style={{ width: 48, height: 48, borderRadius: 14, background: "var(--white)", display: "flex", alignItems: "center", justifyContent: "center", color: k.color, boxShadow: `0 4px 12px ${k.color}25`, border: `1px solid ${k.border}` }}>
+              {k.icon}
             </div>
             <div>
               <p className="kpi-label">{k.label}</p>

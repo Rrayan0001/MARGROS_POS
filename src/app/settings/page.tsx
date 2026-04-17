@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import AppShell from "@/components/AppShell";
 import Modal from "@/components/Modal";
 import { AuthProvider } from "@/context/AuthContext";
@@ -43,14 +43,37 @@ function SettingsContent() {
   const [tab, setTab] = useState<SettingsTab>("profile");
   const [darkMode, setDarkMode] = useState(false);
 
+  const [profileLoading, setProfileLoading] = useState(true);
+  const [profileSaving, setProfileSaving] = useState(false);
+  const [slug, setSlug] = useState("");
   const [profile, setProfile] = useState({
-    restaurantName: user?.restaurantName ?? "",
-    ownerName: user?.name ?? "",
-    email: user?.email ?? "",
+    restaurantName: "",
+    ownerName: "",
+    email: "",
     phone: "",
     address: "",
     gstin: "",
   });
+
+  useEffect(() => {
+    fetch("/api/settings/profile")
+      .then((r) => r.json())
+      .then(({ restaurant }) => {
+        if (restaurant) {
+          setSlug(restaurant.slug ?? "");
+          setProfile({
+            restaurantName: restaurant.name ?? "",
+            ownerName: restaurant.owner_name ?? "",
+            email: restaurant.email ?? "",
+            phone: restaurant.phone ?? "",
+            address: restaurant.address ?? "",
+            gstin: restaurant.gst_number ?? "",
+          });
+        }
+      })
+      .catch(() => toast("Failed to load profile", "error"))
+      .finally(() => setProfileLoading(false));
+  }, [toast]);
 
   const [billing, setBilling] = useState({
     taxRate: 5,
@@ -63,7 +86,28 @@ function SettingsContent() {
   const [addStaffOpen, setAddStaffOpen] = useState(false);
   const [newStaff, setNewStaff] = useState({ name: "", email: "", role: "cashier" });
 
-  const handleSaveProfile = () => toast("Restaurant profile saved!", "success");
+  const handleSaveProfile = async () => {
+    setProfileSaving(true);
+    try {
+      const res = await fetch("/api/settings/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: profile.restaurantName,
+          owner_name: profile.ownerName,
+          phone: profile.phone,
+          address: profile.address,
+          gst_number: profile.gstin,
+        }),
+      });
+      if (!res.ok) throw new Error();
+      toast("Restaurant profile saved!", "success");
+    } catch {
+      toast("Failed to save profile", "error");
+    } finally {
+      setProfileSaving(false);
+    }
+  };
   const handleSaveBilling = () => toast("Billing settings updated!", "success");
 
   const handleAddStaff = () => {
@@ -153,51 +197,97 @@ function SettingsContent() {
                 </div>
               </div>
 
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-                <div className="form-group" style={{ gridColumn: "1 / -1" }}>
-                  <label className="form-label">Restaurant Name</label>
-                  <input className="form-input" value={profile.restaurantName} onChange={(e) => setProfile({ ...profile, restaurantName: e.target.value })} />
+              {profileLoading ? (
+                <div style={{ display: "flex", justifyContent: "center", padding: "40px 0", color: "var(--gray)", fontSize: 14 }}>
+                  Loading profile…
                 </div>
-                <div className="form-group">
-                  <label className="form-label">Owner Name</label>
-                  <input className="form-input" value={profile.ownerName} onChange={(e) => setProfile({ ...profile, ownerName: e.target.value })} />
-                </div>
-                <div className="form-group">
-                  <label className="form-label">Email</label>
-                  <input className="form-input" type="email" value={profile.email} onChange={(e) => setProfile({ ...profile, email: e.target.value })} />
-                </div>
-                <div className="form-group">
-                  <label className="form-label">Phone</label>
-                  <input className="form-input" value={profile.phone} onChange={(e) => setProfile({ ...profile, phone: e.target.value })} />
-                </div>
-                <div className="form-group">
-                  <label className="form-label">GSTIN</label>
-                  <input className="form-input" value={profile.gstin} onChange={(e) => setProfile({ ...profile, gstin: e.target.value })} />
-                </div>
-                <div className="form-group" style={{ gridColumn: "1 / -1" }}>
-                  <label className="form-label">Address</label>
-                  <textarea className="form-input" rows={2} value={profile.address} onChange={(e) => setProfile({ ...profile, address: e.target.value })} style={{ resize: "none" }} />
-                </div>
+              ) : (
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+                  <div className="form-group" style={{ gridColumn: "1 / -1" }}>
+                    <label className="form-label">Restaurant Name</label>
+                    <input className="form-input" value={profile.restaurantName} onChange={(e) => setProfile({ ...profile, restaurantName: e.target.value })} />
+                  </div>
 
-                <div className="form-group" style={{ gridColumn: "1 / -1" }}>
-                  <label className="form-label">Restaurant Logo</label>
-                  <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-                    <div style={{ width: 80, height: 80, borderRadius: 14, border: "2px dashed var(--border)", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", background: "var(--gray-lighter)" }}>
-                      <img src="/logo.png" alt="Logo" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+                  <div className="form-group" style={{ gridColumn: "1 / -1" }}>
+                    <label className="form-label">Your Restaurant URL</label>
+                    <div style={{ display: "flex", alignItems: "center", border: "1.5px solid var(--border)", borderRadius: "var(--radius-md)", overflow: "hidden", background: "var(--gray-lighter)" }}>
+                      <span style={{ padding: "0 12px", fontSize: 13, color: "var(--gray)", borderRight: "1.5px solid var(--border)", whiteSpace: "nowrap", lineHeight: "42px" }}>
+                        {typeof window !== "undefined" ? window.location.origin : ""}/r/
+                      </span>
+                      <input
+                        className="form-input"
+                        value={slug}
+                        readOnly
+                        style={{ border: "none", borderRadius: 0, background: "transparent", color: "var(--charcoal)", fontWeight: 600, cursor: "not-allowed", flex: 1 }}
+                      />
+                      {slug && (
+                        <button
+                          type="button"
+                          className="btn btn-ghost btn-sm"
+                          style={{ margin: "0 6px", fontSize: 12, whiteSpace: "nowrap" }}
+                          onClick={() => {
+                            navigator.clipboard.writeText(`${window.location.origin}/r/${slug}`);
+                            toast("URL copied!", "success");
+                          }}
+                        >
+                          Copy
+                        </button>
+                      )}
                     </div>
-                    <div>
-                      <button className="btn btn-outline btn-sm" onClick={() => toast("Logo upload coming soon!", "info")} style={{ gap: 6 }}>
-                        <UploadSimple size={14} weight="regular" /> Change Logo
-                      </button>
-                      <p style={{ fontSize: 11, color: "var(--gray)", marginTop: 6 }}>PNG, JPG · Max 2MB</p>
+                    <p style={{ fontSize: 11, color: "var(--gray)", marginTop: 4 }}>
+                      Set once at signup — cannot be changed
+                    </p>
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label">Owner Name</label>
+                    <input className="form-input" value={profile.ownerName} onChange={(e) => setProfile({ ...profile, ownerName: e.target.value })} />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Email</label>
+                    <input
+                      className="form-input"
+                      type="email"
+                      value={profile.email}
+                      readOnly
+                      style={{ background: "var(--gray-lighter)", color: "var(--gray)", cursor: "not-allowed" }}
+                      title="Email cannot be changed"
+                    />
+                    <p style={{ fontSize: 11, color: "var(--gray)", marginTop: 4 }}>Email cannot be changed after signup</p>
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Phone {!profile.phone && <span style={{ color: "var(--primary)", fontSize: 10, fontWeight: 700 }}>· Required for receipts</span>}</label>
+                    <input className="form-input" placeholder="e.g. +91 98765 43210" value={profile.phone} onChange={(e) => setProfile({ ...profile, phone: e.target.value })} />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">GSTIN {!profile.gstin && <span style={{ color: "var(--gray)", fontSize: 10, fontWeight: 600 }}>· Optional</span>}</label>
+                    <input className="form-input" placeholder="e.g. 27AAPFU0939F1ZV" value={profile.gstin} onChange={(e) => setProfile({ ...profile, gstin: e.target.value })} />
+                  </div>
+                  <div className="form-group" style={{ gridColumn: "1 / -1" }}>
+                    <label className="form-label">Address {!profile.address && <span style={{ color: "var(--gray)", fontSize: 10, fontWeight: 600 }}>· Optional</span>}</label>
+                    <textarea className="form-input" rows={2} placeholder="Restaurant address" value={profile.address} onChange={(e) => setProfile({ ...profile, address: e.target.value })} style={{ resize: "none" }} />
+                  </div>
+
+                  <div className="form-group" style={{ gridColumn: "1 / -1" }}>
+                    <label className="form-label">Restaurant Logo</label>
+                    <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+                      <div style={{ width: 80, height: 80, borderRadius: 14, border: "2px dashed var(--border)", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", background: "var(--gray-lighter)" }}>
+                        <img src="/logo.png" alt="Logo" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+                      </div>
+                      <div>
+                        <button className="btn btn-outline btn-sm" onClick={() => toast("Logo upload coming soon!", "info")} style={{ gap: 6 }}>
+                          <UploadSimple size={14} weight="regular" /> Change Logo
+                        </button>
+                        <p style={{ fontSize: 11, color: "var(--gray)", marginTop: 6 }}>PNG, JPG · Max 2MB</p>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
+              )}
 
               <div style={{ marginTop: 24, paddingTop: 20, borderTop: "1px solid var(--border)", display: "flex", justifyContent: "flex-end" }}>
-                <button id="settings-save-profile" className="btn btn-primary" onClick={handleSaveProfile} style={{ gap: 7 }}>
-                  <FloppyDisk size={16} weight="fill" /> Save Profile
+                <button id="settings-save-profile" className="btn btn-primary" onClick={handleSaveProfile} disabled={profileLoading || profileSaving} style={{ gap: 7 }}>
+                  <FloppyDisk size={16} weight="fill" /> {profileSaving ? "Saving…" : "Save Profile"}
                 </button>
               </div>
             </div>

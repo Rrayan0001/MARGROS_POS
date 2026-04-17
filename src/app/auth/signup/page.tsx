@@ -1,16 +1,15 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { Buildings, User, EnvelopeSimple, LockSimple, Eye, EyeSlash, CheckCircle, ArrowRight } from "@phosphor-icons/react";
+import { Buildings, User, EnvelopeSimple, LockSimple, Eye, EyeSlash, CheckCircle, ArrowRight, ShieldCheck } from "@phosphor-icons/react";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
 
 function SignupContent() {
   const router = useRouter();
-  const { signup } = useAuth();
-  const [done, setDone] = useState(false);
+  const { signup, verifySignupOtp } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [showPass, setShowPass] = useState(false);
@@ -24,8 +23,25 @@ function SignupContent() {
     confirmPassword: "",
   });
 
+  // OTP step
+  const [otpStep, setOtpStep] = useState(false);
+  const [done, setDone] = useState(false);
+  const [otp, setOtp] = useState(["", "", "", "", "", ""]);
+  const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const [resendCooldown, setResendCooldown] = useState(0);
+
   const update = (field: keyof typeof form, val: string) =>
     setForm((prev) => ({ ...prev, [field]: val }));
+
+  const startResendCooldown = () => {
+    setResendCooldown(30);
+    const interval = setInterval(() => {
+      setResendCooldown((c) => {
+        if (c <= 1) { clearInterval(interval); return 0; }
+        return c - 1;
+      });
+    }, 1000);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,19 +56,77 @@ function SignupContent() {
       setError("Password must be at least 6 characters."); return;
     }
     setLoading(true);
-    const ok = await signup({
+    const result = await signup({
       restaurantName: form.restaurantName,
       ownerName: form.ownerName,
       email: form.email,
       password: form.password,
     });
     setLoading(false);
-    if (!ok) {
-      setError("This email is already registered. Try signing in instead.");
-      return;
+    if (result.otpSent) {
+      setOtpStep(true);
+      startResendCooldown();
+    } else {
+      setError(result.error ?? "This email is already registered. Try signing in instead.");
     }
-    setDone(true);
-    setTimeout(() => router.push("/dashboard"), 2000);
+  };
+
+  const handleOtpChange = (idx: number, val: string) => {
+    if (!/^\d*$/.test(val)) return;
+    const next = [...otp];
+    next[idx] = val.slice(-1);
+    setOtp(next);
+    if (val && idx < 5) otpRefs.current[idx + 1]?.focus();
+  };
+
+  const handleOtpKeyDown = (idx: number, e: React.KeyboardEvent) => {
+    if (e.key === "Backspace" && !otp[idx] && idx > 0) {
+      otpRefs.current[idx - 1]?.focus();
+    }
+  };
+
+  const handleOtpPaste = (e: React.ClipboardEvent) => {
+    const pasted = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
+    if (pasted.length === 6) {
+      setOtp(pasted.split(""));
+      otpRefs.current[5]?.focus();
+    }
+  };
+
+  const handleVerify = async () => {
+    const token = otp.join("");
+    if (token.length < 6) { setError("Enter the full 6-digit code."); return; }
+    setError("");
+    setLoading(true);
+    const result = await verifySignupOtp(form.email, token, {
+      restaurantName: form.restaurantName,
+      ownerName: form.ownerName,
+      email: form.email,
+      password: form.password,
+    });
+    setLoading(false);
+    if (result.success) {
+      setDone(true);
+      setTimeout(() => router.push("/dashboard"), 2000);
+    } else {
+      setError(result.error ?? "Invalid or expired code. Try again.");
+    }
+  };
+
+  const handleResend = async () => {
+    if (resendCooldown > 0) return;
+    setError("");
+    setLoading(true);
+    await signup({
+      restaurantName: form.restaurantName,
+      ownerName: form.ownerName,
+      email: form.email,
+      password: form.password,
+    });
+    setLoading(false);
+    setOtp(["", "", "", "", "", ""]);
+    otpRefs.current[0]?.focus();
+    startResendCooldown();
   };
 
   return (
@@ -76,7 +150,16 @@ function SignupContent() {
       <div className="auth-form-panel">
         <div className="auth-form-box">
 
-          {!done ? (
+          {done ? (
+            <div style={{ textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
+              <div style={{ width: 80, height: 80, borderRadius: "50%", background: "rgba(76,175,80,0.1)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <CheckCircle size={44} weight="fill" color="#4CAF50" />
+              </div>
+              <h1 className="auth-title">You&apos;re all set! 🎉</h1>
+              <p className="auth-subtitle">Welcome to MARGROS POS, {form.ownerName}!<br />Redirecting to your dashboard…</p>
+            </div>
+
+          ) : !otpStep ? (
             <>
               <div className="auth-form-header">
                 <h1 className="auth-title">Create your account</h1>
@@ -134,7 +217,7 @@ function SignupContent() {
 
                 <button id="signup-submit" type="submit" className="btn btn-primary w-full btn-lg" disabled={loading}>
                   {loading ? (
-                    <><span className="loader" />Creating account…</>
+                    <><span className="loader" />Sending verification…</>
                   ) : (
                     <>Create Account <ArrowRight size={16} weight="bold" /></>
                   )}
@@ -146,14 +229,82 @@ function SignupContent() {
                 <Link href="/auth/login" style={{ color: "var(--primary)", fontWeight: 700 }}>Sign in</Link>
               </p>
             </>
+
           ) : (
-            <div style={{ textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
-              <div style={{ width: 80, height: 80, borderRadius: "50%", background: "rgba(76,175,80,0.1)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <CheckCircle size={44} weight="fill" color="#4CAF50" />
+            <>
+              <div className="auth-form-header" style={{ alignItems: "center", textAlign: "center" }}>
+                <div style={{ width: 56, height: 56, borderRadius: 16, background: "var(--primary-10)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 12px" }}>
+                  <ShieldCheck size={28} weight="fill" color="var(--primary)" />
+                </div>
+                <h1 className="auth-title">Verify your email</h1>
+                <p className="auth-subtitle">
+                  We sent a 6-digit code to<br />
+                  <strong style={{ color: "var(--charcoal)" }}>{form.email}</strong>
+                </p>
               </div>
-              <h1 className="auth-title">You&apos;re all set! 🎉</h1>
-              <p className="auth-subtitle">Welcome to MARGROS POS, {form.ownerName}!<br />Redirecting to your dashboard…</p>
-            </div>
+
+              {error && <div className="auth-error">{error}</div>}
+
+              <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+                <div onPaste={handleOtpPaste}>
+                  <label className="form-label" style={{ marginBottom: 12, display: "block" }}>Verification Code</label>
+                  <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
+                    {otp.map((digit, idx) => (
+                      <input
+                        key={idx}
+                        ref={(el) => { otpRefs.current[idx] = el; }}
+                        type="text"
+                        inputMode="numeric"
+                        maxLength={1}
+                        value={digit}
+                        onChange={(e) => handleOtpChange(idx, e.target.value)}
+                        onKeyDown={(e) => handleOtpKeyDown(idx, e)}
+                        style={{
+                          width: 48, height: 56, textAlign: "center",
+                          fontSize: 22, fontWeight: 700, fontFamily: "var(--font-heading)",
+                          border: `2px solid ${digit ? "var(--primary)" : "var(--border)"}`,
+                          borderRadius: 12, outline: "none", background: "var(--white)",
+                          color: "var(--charcoal)", transition: "border-color 0.15s ease",
+                        }}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                <button
+                  className="btn btn-primary w-full btn-lg"
+                  onClick={handleVerify}
+                  disabled={loading || otp.join("").length < 6}
+                >
+                  {loading ? (
+                    <><span className="loader" />Verifying…</>
+                  ) : (
+                    <><ShieldCheck size={18} weight="fill" /> Verify & Create Account</>
+                  )}
+                </button>
+
+                <div style={{ background: "var(--gray-lighter)", borderRadius: 10, padding: "10px 14px", fontSize: 12, color: "var(--gray)", lineHeight: 1.6, textAlign: "center" }}>
+                  📬 The code may take up to <strong>30–60 seconds</strong> to arrive. Please wait before requesting a new one or closing this page.
+                </div>
+
+                <div style={{ textAlign: "center" }}>
+                  <button
+                    onClick={handleResend}
+                    disabled={resendCooldown > 0}
+                    style={{ background: "none", border: "none", cursor: resendCooldown > 0 ? "not-allowed" : "pointer", fontSize: 13, color: resendCooldown > 0 ? "var(--gray)" : "var(--primary)", fontWeight: 600 }}
+                  >
+                    {resendCooldown > 0 ? `Resend code in ${resendCooldown}s` : "Resend code"}
+                  </button>
+                </div>
+
+                <button
+                  onClick={() => { setOtpStep(false); setOtp(["", "", "", "", "", ""]); setError(""); }}
+                  style={{ background: "none", border: "none", cursor: "pointer", fontSize: 13, color: "var(--gray)", textAlign: "center" }}
+                >
+                  ← Back to sign up
+                </button>
+              </div>
+            </>
           )}
         </div>
       </div>

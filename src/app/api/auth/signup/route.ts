@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase";
+import { createClient } from "@supabase/supabase-js";
 
 export async function POST(req: NextRequest) {
   try {
@@ -12,7 +13,6 @@ export async function POST(req: NextRequest) {
     }
 
     const supabase = createServiceClient();
-    const bcrypt = await import("bcryptjs");
 
     // Check if email already exists
     const { data: existing } = await supabase
@@ -25,45 +25,22 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Email already registered" }, { status: 409 });
     }
 
-    // Create restaurant
-    const { data: restaurant, error: restError } = await supabase
-      .from("restaurants")
-      .insert({ name: restaurantName.trim(), owner_name: ownerName.trim(), email: email.toLowerCase().trim() })
-      .select()
-      .single();
-
-    if (restError || !restaurant) {
-      return NextResponse.json({ error: "Failed to create restaurant" }, { status: 500 });
-    }
-
-    // Hash password and create admin user
-    const password_hash = await bcrypt.hash(password, 10);
-    const { data: user, error: userError } = await supabase
-      .from("users")
-      .insert({
-        restaurant_id: restaurant.id,
-        name: ownerName.trim(),
-        email: email.toLowerCase().trim(),
-        password_hash,
-        role: "admin",
-      })
-      .select()
-      .single();
-
-    if (userError || !user) {
-      return NextResponse.json({ error: "Failed to create user" }, { status: 500 });
-    }
-
-    return NextResponse.json({
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        restaurantId: restaurant.id,
-        restaurantName: restaurant.name,
-      },
+    // Send OTP via Supabase Auth — don't create account yet
+    const anonClient = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    );
+    const { error: otpError } = await anonClient.auth.signInWithOtp({
+      email: email.toLowerCase().trim(),
+      options: { shouldCreateUser: true },
     });
+
+    if (otpError) {
+      console.error("OTP send error:", otpError.message);
+      return NextResponse.json({ error: "Failed to send verification code" }, { status: 500 });
+    }
+
+    return NextResponse.json({ otpSent: true, email: email.toLowerCase().trim() });
   } catch (err) {
     console.error("Signup error:", err);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });

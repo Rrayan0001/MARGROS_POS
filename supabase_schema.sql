@@ -12,12 +12,16 @@ create table if not exists restaurants (
   name        text not null,
   owner_name  text not null,
   email       text unique not null,
+  slug        text unique not null,
   phone       text,
   address     text,
   gst_number  text,
   logo_url    text,
   created_at  timestamptz default now()
 );
+
+-- Index for slug lookups (tenant routing)
+create index if not exists idx_restaurants_slug on restaurants(slug);
 
 -- ── Users ────────────────────────────────────────────────────
 create table if not exists users (
@@ -80,6 +84,24 @@ create index if not exists idx_menu_items_restaurant on menu_items(restaurant_id
 create index if not exists idx_orders_restaurant on orders(restaurant_id);
 create index if not exists idx_orders_created_at on orders(created_at desc);
 create index if not exists idx_order_items_order on order_items(order_id);
+
+-- Additional indexes for multi-tenant scalability
+create index if not exists idx_users_restaurant on users(restaurant_id);
+create index if not exists idx_orders_restaurant_status on orders(restaurant_id, status);
+create index if not exists idx_orders_restaurant_created on orders(restaurant_id, created_at desc);
+create index if not exists idx_order_items_menu_item on order_items(menu_item_id);
+create index if not exists idx_menu_items_restaurant_category on menu_items(restaurant_id, category);
+
+-- Add variants column if not already present (for menu item variants support)
+alter table menu_items add column if not exists variants jsonb;
+
+-- Add slug column to existing restaurants table (migration for existing installs)
+alter table restaurants add column if not exists slug text unique;
+create index if not exists idx_restaurants_slug on restaurants(slug);
+
+-- Backfill slugs for any existing restaurants that don't have one
+-- Run this manually if you have existing rows:
+-- update restaurants set slug = lower(regexp_replace(regexp_replace(name, '[^a-zA-Z0-9\s]', '', 'g'), '\s+', '-', 'g')) where slug is null;
 
 -- ── Row Level Security ───────────────────────────────────────
 alter table restaurants  enable row level security;

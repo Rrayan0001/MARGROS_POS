@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase";
+import { createSession, setSessionCookie } from "@/lib/session";
 
 export async function POST(req: NextRequest) {
   try {
@@ -9,8 +10,6 @@ export async function POST(req: NextRequest) {
     }
 
     const supabase = createServiceClient();
-
-    // Find user by email
     const { data: user, error } = await supabase
       .from("users")
       .select("*, restaurants(id, name)")
@@ -22,12 +21,24 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid email or password" }, { status: 401 });
     }
 
-    // Verify password (bcrypt)
     const bcrypt = await import("bcryptjs");
     const valid = await bcrypt.compare(password, user.password_hash);
     if (!valid) {
       return NextResponse.json({ error: "Invalid email or password" }, { status: 401 });
     }
+
+    const restaurantName = (user.restaurants as { name: string } | null)?.name ?? "";
+
+    const token = await createSession({
+      userId: user.id,
+      restaurantId: user.restaurant_id,
+      role: user.role,
+      name: user.name,
+      email: user.email,
+      restaurantName,
+    });
+
+    await setSessionCookie(token);
 
     return NextResponse.json({
       user: {
@@ -36,7 +47,7 @@ export async function POST(req: NextRequest) {
         email: user.email,
         role: user.role,
         restaurantId: user.restaurant_id,
-        restaurantName: (user.restaurants as { name: string } | null)?.name ?? "",
+        restaurantName,
       },
     });
   } catch (err) {

@@ -13,7 +13,6 @@ import {
   CaretDoubleLeft,
   CaretDoubleRight,
   List,
-  Bell,
   Sun,
   Moon,
   SignOut,
@@ -177,14 +176,6 @@ export default function AppShell({ children, title, subtitle }: AppShellProps) {
 
             {/* Right actions */}
             <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-              <button className="appshell-topbar-btn" title="Notifications" style={{ position: "relative" }}>
-                <Bell size={19} weight="regular" />
-                <span style={{
-                  position: "absolute", top: 4, right: 4,
-                  width: 8, height: 8, borderRadius: "50%",
-                  background: "var(--primary)", border: "2px solid var(--white)",
-                }} />
-              </button>
               {user && (
                 <div
                   onClick={() => setDrawerOpen(true)}
@@ -343,24 +334,6 @@ export default function AppShell({ children, title, subtitle }: AppShellProps) {
             <span>{dark ? "Light Mode" : "Dark Mode"}</span>
           </button>
 
-          <button
-            style={{
-              display: "flex", alignItems: "center", gap: 12,
-              padding: "11px 14px", borderRadius: 10, width: "100%",
-              background: "transparent", border: "none", cursor: "pointer",
-              color: "var(--gray)", fontFamily: "var(--font-body)", fontSize: 14, fontWeight: 500,
-              transition: "all 0.15s ease",
-            }}
-            onMouseEnter={(e) => { e.currentTarget.style.background = "var(--gray-lighter)"; e.currentTarget.style.color = "var(--charcoal)"; }}
-            onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "var(--gray)"; }}
-          >
-            <span style={{ position: "relative", display: "flex" }}>
-              <Bell size={20} weight="regular" />
-              <span style={{ position: "absolute", top: -3, right: -3, width: 13, height: 13, borderRadius: "50%", background: "var(--primary)", color: "white", fontSize: 7, fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center", border: "2px solid var(--white)" }}>3</span>
-            </span>
-            <span style={{ flex: 1 }}>Notifications</span>
-            <span style={{ background: "var(--primary)", color: "white", borderRadius: 10, padding: "1px 8px", fontSize: 10, fontWeight: 800 }}>3</span>
-          </button>
         </div>
 
         {/* Logout */}

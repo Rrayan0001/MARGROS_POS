@@ -46,10 +46,11 @@ export function MenuProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(false);
 
   const fetchItems = useCallback(async () => {
-    if (!user?.restaurantId) return;
+    if (!user) return;
     setIsLoading(true);
     try {
-      const res = await fetch(`/api/menu?restaurantId=${user.restaurantId}`);
+      // No restaurantId in URL — middleware injects it from the session cookie
+      const res = await fetch("/api/menu");
       if (!res.ok) throw new Error("Failed to fetch menu");
       const { items: data } = await res.json();
       setItems(data.map((i: Record<string, unknown>) => ({
@@ -68,16 +69,15 @@ export function MenuProvider({ children }: { children: ReactNode }) {
     } finally {
       setIsLoading(false);
     }
-  }, [user?.restaurantId]);
+  }, [user]);
 
   useEffect(() => { fetchItems(); }, [fetchItems]);
 
   const addItem = useCallback(async (item: Omit<MenuItem, "id">) => {
-    if (!user?.restaurantId) return;
     const res = await fetch("/api/menu", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ restaurantId: user.restaurantId, ...item }),
+      body: JSON.stringify(item),
     });
     if (!res.ok) throw new Error("Failed to add item");
     const { item: created } = await res.json();
@@ -88,7 +88,7 @@ export function MenuProvider({ children }: { children: ReactNode }) {
       available: created.available,
       variants: Array.isArray(created.variants) ? created.variants as MenuItemVariant[] : undefined,
     }]);
-  }, [user?.restaurantId]);
+  }, []);
 
   const updateItem = useCallback(async (id: string, updates: Partial<MenuItem>) => {
     const res = await fetch("/api/menu", {
@@ -114,12 +114,25 @@ export function MenuProvider({ children }: { children: ReactNode }) {
   }, [items, updateItem]);
 
   const bulkAddItems = useCallback(async (newItems: Omit<MenuItem, "id">[]) => {
-    if (!user?.restaurantId) return;
-    // Add items sequentially to avoid rate limits
-    for (const item of newItems) {
-      await addItem(item);
-    }
-  }, [user?.restaurantId, addItem]);
+    // Single batch insert instead of sequential awaits
+    const res = await fetch("/api/menu/bulk", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ items: newItems }),
+    });
+    if (!res.ok) throw new Error("Failed to bulk add items");
+    const { items: created } = await res.json();
+    setItems((prev) => [
+      ...prev,
+      ...created.map((i: Record<string, unknown>) => ({
+        id: String(i.id), name: String(i.name), category: String(i.category),
+        price: Number(i.price), tax: Number(i.tax),
+        description: String(i.description ?? ""), image: String(i.image ?? "🍽️"),
+        available: Boolean(i.available),
+        variants: Array.isArray(i.variants) ? i.variants as MenuItemVariant[] : undefined,
+      })),
+    ]);
+  }, []);
 
   return (
     <MenuContext.Provider value={{ items, isLoading, addItem, updateItem, deleteItem, toggleAvailability, bulkAddItems, refresh: fetchItems }}>

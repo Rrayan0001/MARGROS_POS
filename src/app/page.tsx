@@ -20,10 +20,10 @@ export default function WelcomePage() {
     return () => timers.forEach(clearTimeout);
   }, []);
 
-  const fade = (active: boolean, delay = 0) => ({
+  const fade = (active: boolean) => ({
     opacity: active ? 1 : 0,
     transform: active ? "translateY(0px)" : "translateY(28px)",
-    transition: `opacity 0.6s cubic-bezier(0.22,1,0.36,1) ${delay}ms, transform 0.6s cubic-bezier(0.22,1,0.36,1) ${delay}ms`,
+    transition: `opacity 0.6s cubic-bezier(0.22,1,0.36,1), transform 0.6s cubic-bezier(0.22,1,0.36,1)`,
   });
 
   return (
@@ -37,8 +37,9 @@ export default function WelcomePage() {
         justifyContent: "center",
         position: "relative",
         overflow: "hidden",
-        padding: "60px 24px 100px",
+        padding: "60px 20px 80px",
         fontFamily: "var(--font-poppins)",
+        boxSizing: "border-box",
       }}>
 
         {/* Content */}
@@ -46,8 +47,8 @@ export default function WelcomePage() {
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
-          gap: "36px",
-          maxWidth: "560px",
+          gap: "28px",
+          maxWidth: "520px",
           width: "100%",
           textAlign: "center",
           position: "relative",
@@ -65,9 +66,9 @@ export default function WelcomePage() {
             <Image
               src="/logo.png"
               alt="MARGROS POS"
-              width={180}
-              height={180}
-              style={{ objectFit: "contain" }}
+              width={140}
+              height={140}
+              style={{ objectFit: "contain", width: "clamp(90px, 30vw, 140px)", height: "auto" }}
               priority
             />
           </div>
@@ -76,11 +77,11 @@ export default function WelcomePage() {
           <div style={fade(phase >= 2)}>
             <h1 style={{
               fontFamily: "var(--font-poppins)",
-              fontSize: "clamp(48px, 8vw, 72px)",
+              fontSize: "clamp(34px, 11vw, 72px)",
               fontWeight: 800,
               color: "#ffffff",
               letterSpacing: "-0.01em",
-              lineHeight: 1,
+              lineHeight: 1.05,
               margin: 0,
             }}>
               <span style={{ color: "#D94E1F" }}>M</span>ARGROS{" "}
@@ -91,11 +92,12 @@ export default function WelcomePage() {
           {/* Tagline */}
           <p style={{
             ...fade(phase >= 3),
-            fontSize: "clamp(15px, 2.5vw, 18px)",
+            fontSize: "clamp(13px, 3.8vw, 17px)",
             color: "rgba(255,255,255,0.45)",
             fontWeight: 400,
             letterSpacing: "0.02em",
-            margin: "-16px 0 0",
+            margin: "-14px 0 0",
+            lineHeight: 1.5,
           }}>
             Smart Billing for Smart Restaurants
           </p>
@@ -104,9 +106,10 @@ export default function WelcomePage() {
           <div style={{
             ...fade(phase >= 4),
             display: "flex",
-            gap: "16px",
-            flexWrap: "wrap" as const,
-            justifyContent: "center",
+            flexDirection: "column",
+            gap: "12px",
+            width: "100%",
+            maxWidth: "320px",
           }}>
             {/* Sign In */}
             <Link
@@ -114,10 +117,11 @@ export default function WelcomePage() {
               onMouseEnter={() => setHoverPrimary(true)}
               onMouseLeave={() => setHoverPrimary(false)}
               style={{
-                display: "inline-flex",
+                display: "flex",
                 alignItems: "center",
+                justifyContent: "center",
                 gap: "10px",
-                padding: "15px 40px",
+                padding: "15px 32px",
                 background: hoverPrimary ? "#bf4219" : "#D94E1F",
                 color: "#ffffff",
                 borderRadius: "12px",
@@ -130,6 +134,8 @@ export default function WelcomePage() {
                 cursor: "pointer",
                 transform: hoverPrimary ? "translateY(-2px)" : "translateY(0)",
                 transition: "all 0.2s ease",
+                width: "100%",
+                boxSizing: "border-box",
               }}
             >
               Sign In
@@ -144,10 +150,11 @@ export default function WelcomePage() {
               onMouseEnter={() => setHoverOutline(true)}
               onMouseLeave={() => setHoverOutline(false)}
               style={{
-                display: "inline-flex",
+                display: "flex",
                 alignItems: "center",
+                justifyContent: "center",
                 gap: "10px",
-                padding: "15px 40px",
+                padding: "15px 32px",
                 background: hoverOutline ? "rgba(255,255,255,0.08)" : "transparent",
                 color: "#ffffff",
                 borderRadius: "12px",
@@ -160,27 +167,32 @@ export default function WelcomePage() {
                 cursor: "pointer",
                 transform: hoverOutline ? "translateY(-2px)" : "translateY(0)",
                 transition: "all 0.2s ease",
+                width: "100%",
+                boxSizing: "border-box",
               }}
             >
               Get Started Free
             </Link>
           </div>
 
-
-
         </div>
 
         {/* Footer */}
         <div style={{
           position: "absolute",
-          bottom: "24px",
+          bottom: "20px",
+          left: "16px",
+          right: "16px",
           display: "flex",
           alignItems: "center",
-          gap: "12px",
-          fontSize: "12px",
+          justifyContent: "center",
+          flexWrap: "wrap",
+          gap: "6px",
+          fontSize: "11px",
           color: "rgba(255,255,255,0.18)",
           zIndex: 2,
           letterSpacing: "0.03em",
+          textAlign: "center",
         }}>
           <span>© 2026 Margros Technologies</span>
           <span>•</span>
