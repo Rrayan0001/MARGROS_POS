@@ -55,61 +55,53 @@ function VariantPicker({
     >
       <div
         style={{
-          background: "var(--surface)", borderRadius: 20, padding: 28,
-          minWidth: 300, maxWidth: 380, width: "90%",
+          background: "var(--white)", borderRadius: 20, padding: "24px 20px",
+          minWidth: 280, maxWidth: 360, width: "90%",
           boxShadow: "0 24px 60px rgba(0,0,0,0.25)",
           animation: "scaleIn 0.18s ease",
         }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div style={{ textAlign: "center", marginBottom: 20 }}>
-          <div style={{ fontSize: 36, marginBottom: 8 }}>{item.image}</div>
-          <h3 style={{ fontFamily: "var(--font-heading)", fontSize: 18, fontWeight: 800, color: "var(--charcoal)" }}>
+        <div style={{ textAlign: "center", marginBottom: 18 }}>
+          <div style={{ fontSize: 32, marginBottom: 6 }}>{item.image}</div>
+          <h3 style={{ fontFamily: "var(--font-heading)", fontSize: 17, fontWeight: 800, color: "var(--charcoal)" }}>
             {item.name}
           </h3>
-          <p style={{ fontSize: 12, color: "var(--gray)", marginTop: 4 }}>Choose a portion size</p>
+          <p style={{ fontSize: 11, color: "var(--gray)", marginTop: 3 }}>Tap a size to add to cart</p>
         </div>
 
         {/* Variant buttons */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           {variants.map((v) => (
             <button
               key={v.label}
               onClick={() => { onSelect(v); onClose(); }}
               style={{
                 display: "flex", alignItems: "center", justifyContent: "space-between",
-                padding: "14px 18px", borderRadius: 12, border: "2px solid var(--border)",
-                background: "var(--cream)", cursor: "pointer", transition: "all 0.15s ease",
-                fontFamily: "inherit",
+                padding: "16px 20px", borderRadius: 14,
+                border: "2px solid var(--border)",
+                background: "var(--white)", cursor: "pointer", transition: "all 0.12s ease",
+                fontFamily: "inherit", width: "100%",
               }}
               onMouseEnter={(e) => {
                 (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--primary)";
-                (e.currentTarget as HTMLButtonElement).style.background = "rgba(242,106,33,0.06)";
+                (e.currentTarget as HTMLButtonElement).style.background = "var(--primary-10)";
+                (e.currentTarget as HTMLButtonElement).style.transform = "scale(1.02)";
               }}
               onMouseLeave={(e) => {
                 (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--border)";
-                (e.currentTarget as HTMLButtonElement).style.background = "var(--cream)";
+                (e.currentTarget as HTMLButtonElement).style.background = "var(--white)";
+                (e.currentTarget as HTMLButtonElement).style.transform = "scale(1)";
               }}
             >
               <span style={{ fontWeight: 700, fontSize: 15, color: "var(--charcoal)" }}>{v.label}</span>
-              <span style={{ fontWeight: 800, fontSize: 18, color: "var(--primary)", fontFamily: "var(--font-heading)" }}>
+              <span style={{ fontWeight: 800, fontSize: 20, color: "var(--primary)", fontFamily: "var(--font-heading)" }}>
                 ₹{v.price}
               </span>
             </button>
           ))}
         </div>
-
-        <button
-          onClick={onClose}
-          style={{
-            marginTop: 16, width: "100%", padding: "10px", borderRadius: 10,
-            border: "none", background: "var(--gray-lighter)", cursor: "pointer",
-            fontSize: 13, color: "var(--gray)", fontWeight: 600, fontFamily: "inherit",
-          }}
-        >
-          Cancel
-        </button>
       </div>
     </div>
   );

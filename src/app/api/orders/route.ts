@@ -72,15 +72,17 @@ export async function POST(req: NextRequest) {
       .select()
       .single();
 
-    if (orderError || !order) throw orderError;
+    if (orderError || !order) throw orderError ?? new Error("Order insert returned no data");
 
     // Insert order items
+    // Validate UUID format — local mock items have non-UUID ids, store as null if invalid
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     const orderItems = items.map((item: {
       id: string; name: string; category: string;
       price: number; tax: number; qty: number; image: string;
     }) => ({
       order_id: order.id,
-      menu_item_id: item.id,
+      menu_item_id: uuidRegex.test(item.id) ? item.id : null,
       name: item.name,
       category: item.category,
       price: item.price,
@@ -94,7 +96,8 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ order: { ...order, order_items: orderItems } });
   } catch (err) {
-    console.error("POST /api/orders error:", err);
-    return NextResponse.json({ error: "Failed to create order" }, { status: 500 });
+    const msg = err instanceof Error ? err.message : JSON.stringify(err);
+    console.error("POST /api/orders error:", msg, err);
+    return NextResponse.json({ error: "Failed to create order", detail: msg }, { status: 500 });
   }
 }

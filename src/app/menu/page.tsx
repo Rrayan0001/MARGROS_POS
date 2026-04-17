@@ -129,16 +129,20 @@ function MenuContent() {
 
   const handleSave = () => {
     if (!form.name.trim()) { toast("Item name is required", "error"); return; }
+    let saveData = { ...form };
     if (form.variants?.length) {
-      if (form.variants.some((v) => v.price <= 0)) { toast("All variant prices must be greater than 0", "error"); return; }
+      // Only keep variants that have a price filled in
+      const filledVariants = form.variants.filter((v) => v.price > 0);
+      if (filledVariants.length === 0) { toast("At least one variant price is required", "error"); return; }
+      saveData = { ...saveData, variants: filledVariants, price: filledVariants[0].price };
     } else {
       if (form.price <= 0) { toast("Price must be greater than 0", "error"); return; }
     }
     if (editingItem) {
-      updateItem(editingItem.id, form);
+      updateItem(editingItem.id, saveData);
       toast("Item updated!", "success");
     } else {
-      addItem(form);
+      addItem(saveData);
       toast("Item added to menu!", "success");
     }
     setModalOpen(false);
