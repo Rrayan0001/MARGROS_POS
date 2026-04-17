@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Verification Code - MARGROS POS</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body style="margin: 0; padding: 0; background-color: #FFF8F2; font-family: 'Poppins', Arial, Helvetica, sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #FFF8F2; padding: 40px 0;">
+    <tr>
+      <td align="center">
+        <!-- Main Card -->
+        <table width="480" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 25px rgba(242, 106, 33, 0.08); border: 1px solid #F1F5F9;">
+
+          <!-- Header / Brand -->
+          <tr>
+            <td style="background-color: #ffffff; padding: 40px 40px 20px 40px; text-align: center;">
+              <div style="display: inline-block; padding: 12px; border-radius: 12px; background-color: #F26A2110; border: 1.5px solid #F26A2120; margin-bottom: 20px;">
+                <!-- Placeholder for logo - would be fully qualified URL in production -->
+                <img src="https://margros.in/logo.png" alt="MARGROS POS" width="40" height="40" style="display: block; object-fit: contain;" />
+              </div>
+              <h1 style="margin: 0; font-size: 24px; color: #121212; font-weight: 800; letter-spacing: -0.01em;">
+                <span style="color: #F26A21;">M</span>ARGROS <span style="color: #4CAF50;">POS</span>
+              </h1>
+              <p style="margin: 4px 0 0 0; font-size: 11px; color: #F26A21; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em;">
+                Smart Billing for Smart Restaurants
+              </p>
+            </td>
+          </tr>
+
+          <!-- Body Content -->
+          <tr>
+            <td style="padding: 20px 40px 30px 40px; text-align: center;">
+              <div style="height: 1px; background-color: #F1F5F9; margin-bottom: 30px;"></div>
+              
+              <h2 style="margin: 0 0 12px 0; font-size: 20px; color: #1E293B; font-weight: 700;">
+                Verify Your Account
+              </h2>
+              <p style="margin: 0 0 32px 0; font-size: 15px; color: #64748B; line-height: 1.6;">
+                Use the verification code below to securely log into your MARGROS account. This code's security is vital—please do not share it.
+              </p>
+
+              <!-- OTP Container -->
+              <div style="display: inline-block; background-color: #F26A2108; border: 2px dashed #F26A2140; border-radius: 12px; padding: 20px 40px; margin-bottom: 32px;">
+                <span style="font-size: 38px; font-weight: 700; letter-spacing: 12px; color: #F26A21; font-family: monospace;">
+                  {{ .Token }}
+                </span>
+              </div>
+
+              <div style="padding: 12px; background-color: #F8FAFC; border-radius: 8px; display: inline-block;">
+                <p style="margin: 0; font-size: 13px; color: #64748B; font-weight: 500;">
+                  ⏱ This code expires in <strong style="color: #F26A21;">10 minutes</strong>.
+                </p>
+              </div>
+            </td>
+          </tr>
+
+          <!-- Help / Footer -->
+          <tr>
+            <td style="padding: 0 40px 40px 40px; text-align: center;">
+              <div style="height: 1px; background-color: #F1F5F9; margin-bottom: 25px;"></div>
+              
+              <p style="margin: 0; font-size: 12px; color: #94A3B8; line-height: 1.5;">
+                If you didn't request a code, you can safely ignore this email. Someone may have entered your address by mistake.
+              </p>
+              
+              <div style="margin-top: 30px;">
+                <p style="margin: 0; font-size: 12px; color: #121212; font-weight: 700;">
+                  © 2026 Margros Technologies PVT LTD.
+                </p>
+                <p style="margin: 4px 0 0 0; font-size: 11px; color: #94A3B8;">
+                  Fast. Fresh. Reliable. Simple.
+                </p>
+              </div>
+            </td>
+          </tr>
+
+        </table>
+
+        <!-- Subtle sub-footer -->
+        <table width="480" cellpadding="0" cellspacing="0">
+          <tr>
+            <td style="padding: 20px; text-align: center;">
+              <p style="margin: 0; font-size: 11px; color: #CBD5E1;">
+                Made with ❤️ for the Indian Food Industry
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
