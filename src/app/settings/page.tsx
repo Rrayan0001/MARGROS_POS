@@ -212,7 +212,7 @@ function SettingsContent() {
                     <label className="form-label">Your Restaurant URL</label>
                     <div style={{ display: "flex", alignItems: "center", border: "1.5px solid var(--border)", borderRadius: "var(--radius-md)", overflow: "hidden", background: "var(--gray-lighter)" }}>
                       <span style={{ padding: "0 12px", fontSize: 13, color: "var(--gray)", borderRight: "1.5px solid var(--border)", whiteSpace: "nowrap", lineHeight: "42px" }}>
-                        {typeof window !== "undefined" ? window.location.origin : ""}/r/
+                        {process.env.NEXT_PUBLIC_APP_URL}/r/
                       </span>
                       <input
                         className="form-input"
@@ -226,7 +226,7 @@ function SettingsContent() {
                           className="btn btn-ghost btn-sm"
                           style={{ margin: "0 6px", fontSize: 12, whiteSpace: "nowrap" }}
                           onClick={() => {
-                            navigator.clipboard.writeText(`${window.location.origin}/r/${slug}`);
+                            navigator.clipboard.writeText(`${process.env.NEXT_PUBLIC_APP_URL}/r/${slug}`);
                             toast("URL copied!", "success");
                           }}
                         >
