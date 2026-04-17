@@ -26,7 +26,6 @@ export const metadata: Metadata = {
   description:
     "A premium restaurant POS platform built for modern restaurants, cafes, QSRs, food courts, and cloud kitchens. Fast billing, menu control, analytics & AI-powered onboarding.",
   keywords: ["restaurant POS", "billing software", "menu management", "restaurant analytics"],
-  icons: { icon: "/logo.png" },
 };
 
 export default function RootLayout({
