@@ -16,8 +16,6 @@ import {
   Receipt,
   ForkKnife,
   ChartLine,
-  ArrowUpRight,
-  ArrowDownRight,
   Clock,
 } from "@phosphor-icons/react";
 
@@ -41,8 +39,6 @@ function DashboardContent() {
       color: "#F26A21",
       bg: "linear-gradient(135deg, rgba(242,106,33,0.12), rgba(242,106,33,0.04))",
       border: "rgba(242,106,33,0.18)",
-      trend: "+12.4%",
-      up: true,
     },
     {
       label: "Monthly Revenue",
@@ -51,8 +47,6 @@ function DashboardContent() {
       color: "#4CAF50",
       bg: "linear-gradient(135deg, rgba(76,175,80,0.12), rgba(76,175,80,0.04))",
       border: "rgba(76,175,80,0.18)",
-      trend: "+8.1%",
-      up: true,
     },
     {
       label: "Total Orders",
@@ -61,8 +55,6 @@ function DashboardContent() {
       color: "#7C3AED",
       bg: "linear-gradient(135deg, rgba(124,58,237,0.12), rgba(124,58,237,0.04))",
       border: "rgba(124,58,237,0.18)",
-      trend: "+5.2%",
-      up: true,
     },
     {
       label: "Avg Order Value",
@@ -71,8 +63,6 @@ function DashboardContent() {
       color: "#0891B2",
       bg: "linear-gradient(135deg, rgba(8,145,178,0.12), rgba(8,145,178,0.04))",
       border: "rgba(8,145,178,0.18)",
-      trend: "-1.8%",
-      up: false,
     },
   ];
 
@@ -118,25 +108,14 @@ function DashboardContent() {
             className="kpi-card"
             style={{ animationDelay: `${i * 60}ms`, background: k.bg, border: `1.5px solid ${k.border}`, boxShadow: "none" }}
           >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-              <div style={{
-                width: 44, height: 44, borderRadius: 12,
-                background: "var(--white)",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                color: k.color, boxShadow: `0 4px 12px ${k.color}20`,
-                border: `1px solid ${k.border}`,
-              }}>
-                {k.icon}
-              </div>
-              <span style={{
-                display: "flex", alignItems: "center", gap: 3,
-                background: k.up ? "rgba(76,175,80,0.1)" : "rgba(239,68,68,0.1)",
-                color: k.up ? "#4CAF50" : "#EF4444",
-                padding: "3px 8px", borderRadius: 100, fontSize: 11, fontWeight: 700,
-              }}>
-                {k.up ? <ArrowUpRight size={12} weight="bold" /> : <ArrowDownRight size={12} weight="bold" />}
-                {k.trend}
-              </span>
+            <div style={{
+              width: 44, height: 44, borderRadius: 12,
+              background: "var(--white)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              color: k.color, boxShadow: `0 4px 12px ${k.color}20`,
+              border: `1px solid ${k.border}`,
+            }}>
+              {k.icon}
             </div>
             <div style={{ marginTop: 12 }}>
               <p className="kpi-label">{k.label}</p>
@@ -207,7 +186,7 @@ function DashboardContent() {
             <tbody>
               {recentOrders.map((o) => (
                 <tr key={o.id}>
-                  <td><strong style={{ fontFamily: "var(--font-heading)", fontSize: 13 }}>{o.id}</strong></td>
+                  <td><strong style={{ fontFamily: "var(--font-heading)", fontSize: 13 }}>{o.orderNumber}</strong></td>
                   <td style={{ color: "var(--gray)", fontSize: 13 }}>
                     {o.items.slice(0, 2).map((i) => i.name).join(", ")}
                     {o.items.length > 2 ? ` +${o.items.length - 2}` : ""}
