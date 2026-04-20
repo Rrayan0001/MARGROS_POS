@@ -27,7 +27,6 @@ function SettingsContent() {
   const [darkMode, setDarkMode] = useState(false);
   const [profileLoading, setProfileLoading] = useState(true);
   const [profileSaving, setProfileSaving] = useState(false);
-  const [slug, setSlug] = useState("");
   const [profile, setProfile] = useState({ restaurantName: "", ownerName: "", email: "", phone: "", address: "", gstin: "" });
   const [billing, setBilling] = useState({ taxRate: 5, currency: "INR", receiptStyle: "detailed", autoDiscount: false });
   const [staff, setStaff] = useState<StaffMember[]>([]);
@@ -37,7 +36,6 @@ function SettingsContent() {
   useEffect(() => {
     fetch("/api/settings/profile").then((r) => r.json()).then(({ restaurant }) => {
       if (restaurant) {
-        setSlug(restaurant.slug ?? "");
         setProfile({ restaurantName: restaurant.name ?? "", ownerName: restaurant.owner_name ?? "", email: restaurant.email ?? "", phone: restaurant.phone ?? "", address: restaurant.address ?? "", gstin: restaurant.gst_number ?? "" });
       }
     }).catch(() => toast("Failed to load profile", "error")).finally(() => setProfileLoading(false));
@@ -120,19 +118,6 @@ function SettingsContent() {
                   <div className="form-group" style={{ gridColumn: "1 / -1" }}>
                     <label className="form-label">Restaurant Name</label>
                     <input className="form-input" value={profile.restaurantName} onChange={(e) => setProfile({ ...profile, restaurantName: e.target.value })} />
-                  </div>
-                  <div className="form-group" style={{ gridColumn: "1 / -1" }}>
-                    <label className="form-label">Your Restaurant URL</label>
-                    <div style={{ display: "flex", alignItems: "center", border: "1px solid var(--line)", borderRadius: "var(--radius)", overflow: "hidden", background: "var(--chip)" }}>
-                      <span style={{ padding: "0 12px", fontSize: 12, color: "var(--muted)", borderRight: "1px solid var(--line)", whiteSpace: "nowrap", lineHeight: "44px", fontFamily: "var(--mono)" }}>
-                        {process.env.NEXT_PUBLIC_APP_URL}/r/
-                      </span>
-                      <input className="form-input" value={slug} readOnly style={{ border: "none", borderRadius: 0, background: "transparent", cursor: "not-allowed", flex: 1 }} />
-                      {slug && (
-                        <button type="button" className="btn btn-ghost btn-sm" style={{ margin: "0 6px" }} onClick={() => { navigator.clipboard.writeText(`${process.env.NEXT_PUBLIC_APP_URL}/r/${slug}`); toast("URL copied!", "success"); }}>Copy</button>
-                      )}
-                    </div>
-                    <p style={{ fontSize: 11, color: "var(--muted)", marginTop: 4 }}>Set once at signup — cannot be changed</p>
                   </div>
                   <div className="form-group">
                     <label className="form-label">Owner Name</label>

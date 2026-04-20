@@ -11,7 +11,7 @@ export async function GET(req: NextRequest) {
     const supabase = createServiceClient();
     const { data, error } = await supabase
       .from("restaurants")
-      .select("id, name, owner_name, email, phone, address, gst_number, logo_url, slug")
+      .select("id, name, owner_name, email, phone, address, gst_number, logo_url")
       .eq("id", restaurantId)
       .single();
 
@@ -36,7 +36,6 @@ export async function PATCH(req: NextRequest) {
     const body = await req.json();
     const { name, owner_name, phone, address, gst_number } = body;
 
-    // slug is intentionally excluded — it is set once at signup and never updated
     const updates: Record<string, string> = {};
     if (name !== undefined) updates.name = String(name).trim();
     if (owner_name !== undefined) updates.owner_name = String(owner_name).trim();
@@ -49,7 +48,7 @@ export async function PATCH(req: NextRequest) {
       .from("restaurants")
       .update(updates)
       .eq("id", restaurantId)
-      .select("id, name, owner_name, email, phone, address, gst_number, logo_url, slug")
+      .select("id, name, owner_name, email, phone, address, gst_number, logo_url")
       .single();
 
     if (error) throw error;
