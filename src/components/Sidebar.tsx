@@ -34,14 +34,17 @@ export default function Sidebar({ collapsed }: SidebarProps) {
   const [dark, setDark] = useState(false);
   const [time, setTime] = useState("");
   const [date, setDate] = useState("");
+  const [greeting, setGreeting] = useState("Welcome");
   const pathname = usePathname();
   const { user, logout } = useAuth();
 
   useEffect(() => {
     const tick = () => {
       const now = new Date();
+      const hour = now.getHours();
       setTime(now.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }));
       setDate(now.toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short" }));
+      setGreeting(hour < 12 ? "Morning" : hour < 17 ? "Afternoon" : "Evening");
     };
     tick();
     const id = setInterval(tick, 1000);
@@ -58,9 +61,6 @@ export default function Sidebar({ collapsed }: SidebarProps) {
   const visibleItems = NAV_ITEMS.filter(
     (item) => !item.roles || (user && item.roles.includes(user.role))
   );
-
-  const hour = new Date().getHours();
-  const greeting = hour < 12 ? "Morning" : hour < 17 ? "Afternoon" : "Evening";
 
   return (
     <aside

@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import AppShell from "@/components/AppShell";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
@@ -20,6 +20,7 @@ import {
 function DashboardContent() {
   const router = useRouter();
   const { user } = useAuth();
+  const [greeting, setGreeting] = useState<string | null>(null);
   const {
     orders,
     todaySales,
@@ -30,8 +31,11 @@ function DashboardContent() {
   } = useOrders();
 
   const recentOrders = orders.slice(0, 5);
-  const hour = new Date().getHours();
-  const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
+
+  useEffect(() => {
+    const hour = new Date().getHours();
+    setGreeting(hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening");
+  }, []);
 
   const kpis = [
     {
@@ -66,7 +70,7 @@ function DashboardContent() {
 
   return (
     <AppShell
-      title={`${greeting}, ${user?.name?.split(" ")[0] ?? "there"}.`}
+      title={greeting ? `${greeting}, ${user?.name?.split(" ")[0] ?? "there"}.` : `Welcome, ${user?.name?.split(" ")[0] ?? "there"}.`}
       subtitle={`${user?.restaurantName ?? "MARGROS"} · Overview`}
     >
       {/* Header action buttons */}

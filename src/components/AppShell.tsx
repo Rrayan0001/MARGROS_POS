@@ -51,6 +51,7 @@ export default function AppShell({ children, title, subtitle }: AppShellProps) {
   const [dark, setDark] = useState(false);
   const [time, setTime] = useState("");
   const [date, setDate] = useState("");
+  const [greeting, setGreeting] = useState("Welcome");
   const rippleRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pathname = usePathname();
   const { user, logout } = useAuth();
@@ -61,8 +62,10 @@ export default function AppShell({ children, title, subtitle }: AppShellProps) {
   useEffect(() => {
     const tick = () => {
       const now = new Date();
+      const hour = now.getHours();
       setTime(now.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }));
       setDate(now.toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short" }));
+      setGreeting(hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening");
     };
     tick();
     const id = setInterval(tick, 1000);
@@ -106,8 +109,6 @@ export default function AppShell({ children, title, subtitle }: AppShellProps) {
   useEffect(() => () => { if (rippleRef.current) clearTimeout(rippleRef.current); }, []);
 
   const roleLabel = user?.role === "admin" ? "ADMIN" : user?.role === "manager" ? "MANAGER" : "CASHIER";
-  const hour = new Date().getHours();
-  const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
 
   // Build breadcrumb from pathname
   const crumbs = pathname
@@ -206,7 +207,7 @@ export default function AppShell({ children, title, subtitle }: AppShellProps) {
           {/* Desktop page title area */}
           <div className="appshell-page-title">
             {subtitle && <div className="eyebrow" style={{ marginBottom: 8 }}>{subtitle}</div>}
-            <h1 className="h2" style={{ fontWeight: 600, letterSpacing: "-0.02em" }}>
+            <h1 className="h2" style={{ fontWeight: 600, letterSpacing: "-0.02em" }} suppressHydrationWarning>
               {title}
             </h1>
           </div>

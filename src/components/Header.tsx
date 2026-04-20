@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Sun, Moon } from "@phosphor-icons/react";
 import { useAuth } from "@/context/AuthContext";
 
@@ -13,18 +13,30 @@ interface HeaderProps {
 export default function Header({ title, subtitle }: HeaderProps) {
   const { user } = useAuth();
   const [dark, setDark] = useState(false);
+  const [timeStr, setTimeStr] = useState("--:--");
+  const [dateStr, setDateStr] = useState("Loading date");
+  const [greeting, setGreeting] = useState("Welcome");
+  const [greetEmoji, setGreetEmoji] = useState("👋");
 
   const toggleTheme = () => {
     setDark(!dark);
     document.documentElement.setAttribute("data-theme", dark ? "light" : "dark");
   };
 
-  const now = new Date();
-  const timeStr = now.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" });
-  const dateStr = now.toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long" });
-  const hour = now.getHours();
-  const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
-  const greetEmoji = hour < 12 ? "☀️" : hour < 17 ? "🌤️" : "🌙";
+  useEffect(() => {
+    const tick = () => {
+      const now = new Date();
+      const hour = now.getHours();
+      setTimeStr(now.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }));
+      setDateStr(now.toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long" }));
+      setGreeting(hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening");
+      setGreetEmoji(hour < 12 ? "☀️" : hour < 17 ? "🌤️" : "🌙");
+    };
+
+    tick();
+    const id = setInterval(tick, 60_000);
+    return () => clearInterval(id);
+  }, []);
 
   return (
     <header className="app-header">

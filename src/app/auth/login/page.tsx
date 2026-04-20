@@ -4,10 +4,12 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
+import { ToastProvider, useToast } from "@/components/Toast";
 import { Eye, EyeSlash, ShieldCheck } from "@phosphor-icons/react";
 
 function LoginContent() {
   const { login } = useAuth();
+  const { toast } = useToast();
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -20,13 +22,15 @@ function LoginContent() {
     if (!email || !password) { setError("Please fill in all fields."); return; }
     setLoading(true);
     setError("");
-    try {
-      await login(email, password);
+    
+    const result = await login(email, password);
+    
+    if (result.success) {
       router.push("/dashboard");
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Login failed";
-      setError(msg || "Invalid email or password.");
-    } finally {
+    } else {
+      const msg = result.error || "Invalid email or password.";
+      setError(msg);
+      toast(msg, "error");
       setLoading(false);
     }
   };
@@ -260,7 +264,9 @@ function LoginContent() {
 export default function LoginPage() {
   return (
     <AuthProvider>
-      <LoginContent />
+      <ToastProvider>
+        <LoginContent />
+      </ToastProvider>
     </AuthProvider>
   );
 }
