@@ -8,15 +8,13 @@ import { MenuProvider } from "@/context/MenuContext";
 import { OrderProvider, useOrders } from "@/context/OrderContext";
 import { ToastProvider } from "@/components/Toast";
 import {
-  CurrencyInr,
-  TrendUp,
-  ShoppingCart,
-  Calculator,
-  Trophy,
   Receipt,
+  Desktop,
   ForkKnife,
   ChartLine,
   Clock,
+  Trophy,
+  TrendUp,
 } from "@phosphor-icons/react";
 
 function DashboardContent() {
@@ -31,175 +29,160 @@ function DashboardContent() {
     topSellingItem,
   } = useOrders();
 
+  const recentOrders = orders.slice(0, 5);
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
+
   const kpis = [
     {
+      idx: "01",
       label: "Today's Sales",
       value: `₹${todaySales.toLocaleString("en-IN")}`,
-      icon: <CurrencyInr size={22} weight="fill" />,
-      color: "#F26A21",
-      bg: "linear-gradient(135deg, rgba(242,106,33,0.12), rgba(242,106,33,0.04))",
-      border: "rgba(242,106,33,0.18)",
+      trend: "+12% vs yesterday",
+      trendDir: "up",
     },
     {
+      idx: "02",
       label: "Monthly Revenue",
       value: `₹${monthlyRevenue.toLocaleString("en-IN")}`,
-      icon: <TrendUp size={22} weight="fill" />,
-      color: "#4CAF50",
-      bg: "linear-gradient(135deg, rgba(76,175,80,0.12), rgba(76,175,80,0.04))",
-      border: "rgba(76,175,80,0.18)",
+      trend: "Running total",
+      trendDir: "neutral",
     },
     {
+      idx: "03",
       label: "Total Orders",
       value: totalOrders.toLocaleString("en-IN"),
-      icon: <ShoppingCart size={22} weight="fill" />,
-      color: "#7C3AED",
-      bg: "linear-gradient(135deg, rgba(124,58,237,0.12), rgba(124,58,237,0.04))",
-      border: "rgba(124,58,237,0.18)",
+      trend: `${recentOrders.length} today`,
+      trendDir: "neutral",
     },
     {
+      idx: "04",
       label: "Avg Order Value",
       value: `₹${avgOrderValue}`,
-      icon: <Calculator size={22} weight="fill" />,
-      color: "#0891B2",
-      bg: "linear-gradient(135deg, rgba(8,145,178,0.12), rgba(8,145,178,0.04))",
-      border: "rgba(8,145,178,0.18)",
+      trend: "Per transaction",
+      trendDir: "neutral",
     },
-  ];
-
-  const recentOrders = orders.slice(0, 5);
-
-  const quickActions = [
-    { label: "New Bill",     icon: <Receipt   size={24} weight="duotone" />, color: "#F26A21", href: "/billing" },
-    { label: "Menu",         icon: <ForkKnife size={24} weight="duotone" />, color: "#0891B2", href: "/menu"    },
-    { label: "Reports",      icon: <ChartLine size={24} weight="duotone" />, color: "#D97706", href: "/reports" },
   ];
 
   return (
-    <AppShell title="Dashboard" subtitle={`${user?.restaurantName} — Overview`}>
-
-      {/* Quick Actions */}
-      <div style={{ display: "flex", gap: 12, marginBottom: 28 }}>
-        {quickActions.map((a) => (
-          <button
-            key={a.href}
-            onClick={() => router.push(a.href)}
-            style={{
-              flex: 1, display: "flex", flexDirection: "column",
-              alignItems: "center", justifyContent: "center", gap: 8,
-              padding: "16px 8px", borderRadius: 14,
-              background: `${a.color}10`,
-              border: `1.5px solid ${a.color}22`,
-              cursor: "pointer", transition: "all 0.15s ease",
-            }}
-            onMouseEnter={(e) => { e.currentTarget.style.background = `${a.color}1E`; e.currentTarget.style.transform = "translateY(-2px)"; }}
-            onMouseLeave={(e) => { e.currentTarget.style.background = `${a.color}10`; e.currentTarget.style.transform = "translateY(0)"; }}
-          >
-            <span style={{ color: a.color }}>{a.icon}</span>
-            <span style={{ fontSize: 12, fontWeight: 700, color: "var(--charcoal)", fontFamily: "var(--font-body)", whiteSpace: "nowrap" }}>{a.label}</span>
-          </button>
-        ))}
+    <AppShell
+      title={`${greeting}, ${user?.name?.split(" ")[0] ?? "there"}.`}
+      subtitle={`${user?.restaurantName ?? "MARGROS"} · Overview`}
+    >
+      {/* Header action buttons */}
+      <div style={{ display: "flex", gap: 8, marginBottom: 36, flexWrap: "wrap" }}>
+        <button
+          className="btn btn-outline"
+          onClick={() => router.push("/billing")}
+          style={{ gap: 8 }}
+        >
+          <Desktop size={15} weight="regular" />
+          New Order
+        </button>
+        <button
+          className="btn btn-outline"
+          onClick={() => router.push("/menu")}
+          style={{ gap: 8 }}
+        >
+          <ForkKnife size={15} weight="regular" />
+          Menu
+        </button>
+        <button
+          className="btn btn-outline"
+          onClick={() => router.push("/reports")}
+          style={{ gap: 8 }}
+        >
+          <ChartLine size={15} weight="regular" />
+          Reports
+        </button>
       </div>
 
-      {/* KPI Grid */}
+      {/* KPI Grid — editorial style */}
       <div className="kpi-grid stagger" style={{ marginBottom: 28 }}>
-        {kpis.map((k, i) => (
-          <div
-            key={k.label}
-            className="kpi-card"
-            style={{ animationDelay: `${i * 60}ms`, background: k.bg, border: `1.5px solid ${k.border}`, boxShadow: "none" }}
-          >
-            <div style={{
-              width: 44, height: 44, borderRadius: 12,
-              background: "var(--white)",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              color: k.color, boxShadow: `0 4px 12px ${k.color}20`,
-              border: `1px solid ${k.border}`,
-            }}>
-              {k.icon}
+        {kpis.map((k) => (
+          <div key={k.label} className="kpi-card">
+            <div className="kpi-label">
+              <span className="idx mono">{k.idx}</span>
+              {k.label}
             </div>
-            <div style={{ marginTop: 12 }}>
-              <p className="kpi-label">{k.label}</p>
-              <p className="kpi-value" style={{ fontSize: 24, marginTop: 2, color: k.color }}>{k.value}</p>
+            <div className="kpi-value">{k.value}</div>
+            <div className="kpi-trend" style={{ marginTop: 4 }}>
+              {k.trendDir === "up" && <TrendUp size={12} />}
+              {k.trend}
             </div>
           </div>
         ))}
       </div>
 
-      {/* Top Selling Item */}
-      <div style={{
-        borderRadius: 16, padding: "16px 20px", marginBottom: 24,
-        background: "linear-gradient(135deg, rgba(217,119,6,0.10), rgba(217,119,6,0.03))",
-        border: "1.5px solid rgba(217,119,6,0.18)",
-        display: "flex", alignItems: "center", gap: 16,
-      }}>
-        <div style={{
-          width: 48, height: 48, borderRadius: 13, flexShrink: 0,
-          background: "var(--white)",
-          display: "flex", alignItems: "center", justifyContent: "center",
-          color: "#D97706", boxShadow: "0 4px 12px rgba(217,119,6,0.18)",
-          border: "1px solid rgba(217,119,6,0.18)",
-        }}>
-          <Trophy size={24} weight="fill" />
-        </div>
-        <div style={{ flex: 1 }}>
-          <p style={{ fontSize: 10, fontWeight: 700, color: "var(--gray)", textTransform: "uppercase", letterSpacing: "0.08em" }}>Top Selling Item</p>
-          <p style={{ fontSize: 16, fontWeight: 800, color: "#D97706", marginTop: 3, fontFamily: "var(--font-heading)" }}>{topSellingItem}</p>
-        </div>
-        <span style={{
-          fontSize: 11, fontWeight: 700, color: "#D97706",
-          background: "rgba(217,119,6,0.12)", padding: "4px 12px",
-          borderRadius: 100,
-        }}>🔥 Hot</span>
-      </div>
+      {/* Two-column: Top Seller + Recent Orders */}
+      <div className="dashboard-bottom-grid">
 
-      {/* Recent Orders */}
-      <div className="card card-padded" style={{ animation: "fadeUp 0.5s ease both", animationDelay: "300ms" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <div style={{
-              width: 34, height: 34, borderRadius: 10,
-              background: "var(--primary-10)",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              color: "var(--primary)",
-            }}>
-              <Receipt size={17} weight="fill" />
-            </div>
-            <div>
-              <h3 style={{ fontFamily: "var(--font-heading)", fontSize: 15, fontWeight: 700 }}>Recent Orders</h3>
-              <p style={{ fontSize: 11, color: "var(--gray)", marginTop: 1 }}>Latest transactions</p>
-            </div>
+        {/* Top Seller */}
+        <div className="card card-padded" style={{ animation: "fadeUp 0.4s ease both", animationDelay: "120ms", display: "flex", flexDirection: "column", gap: 16 }}>
+          <div className="kpi-label">
+            <Trophy size={13} weight="fill" />
+            Top Seller
           </div>
-          <button className="btn btn-outline btn-sm" onClick={() => router.push("/reports")}>View All</button>
+          {/* Hatched swatch */}
+          <div style={{
+            height: 80, borderRadius: "var(--radius)",
+            background: "repeating-linear-gradient(45deg, var(--chip) 0 8px, var(--bg-alt) 8px 16px)",
+            border: "1px solid var(--line-2)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+          }}>
+            <span style={{ fontSize: 32 }}>🏆</span>
+          </div>
+          <div>
+            <p style={{ fontSize: 16, fontWeight: 600, color: "var(--ink)", letterSpacing: "-0.01em", lineHeight: 1.2 }}>
+              {topSellingItem}
+            </p>
+            <p style={{ fontFamily: "var(--mono)", fontSize: 10.5, color: "var(--muted)", marginTop: 6, letterSpacing: "0.1em", textTransform: "uppercase" }}>
+              Most ordered item
+            </p>
+          </div>
         </div>
 
-        <div className="table-wrapper">
-          <table>
-            <thead>
-              <tr>
-                <th>Order ID</th>
-                <th>Items</th>
-                <th>Total</th>
-                <th>Payment</th>
-                <th>Time</th>
-              </tr>
-            </thead>
-            <tbody>
-              {recentOrders.map((o) => (
-                <tr key={o.id}>
-                  <td><strong style={{ fontFamily: "var(--font-heading)", fontSize: 13 }}>{o.orderNumber}</strong></td>
-                  <td style={{ color: "var(--gray)", fontSize: 13 }}>
-                    {o.items.slice(0, 2).map((i) => i.name).join(", ")}
-                    {o.items.length > 2 ? ` +${o.items.length - 2}` : ""}
-                  </td>
-                  <td><strong style={{ color: "var(--primary)" }}>₹{o.total.toLocaleString("en-IN")}</strong></td>
-                  <td><span className="badge badge-gray">{o.payment}</span></td>
-                  <td style={{ display: "flex", alignItems: "center", gap: 5, color: "var(--gray)", fontSize: 13 }}>
-                    <Clock size={13} weight="regular" /> {new Date(o.createdAt).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}
-                  </td>
+        {/* Recent Orders */}
+        <div className="card" style={{ animation: "fadeUp 0.4s ease both", animationDelay: "200ms", overflow: "hidden" }}>
+          <div style={{ padding: "18px 22px", borderBottom: "1px solid var(--line)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div>
+              <p style={{ fontSize: 14, fontWeight: 600, letterSpacing: "-0.01em", color: "var(--ink)" }}>Recent Orders</p>
+              <p className="eyebrow" style={{ marginTop: 2 }}>Latest transactions</p>
+            </div>
+            <button className="btn btn-outline btn-sm" onClick={() => router.push("/reports")}>
+              View all
+            </button>
+          </div>
+          <div className="table-wrapper" style={{ border: "none", borderRadius: 0 }}>
+            <table className="tbl">
+              <thead>
+                <tr>
+                  <th>Order</th>
+                  <th>Items</th>
+                  <th>Total</th>
+                  <th>Payment</th>
+                  <th>Time</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {recentOrders.map((o) => (
+                  <tr key={o.id}>
+                    <td className="mono" style={{ fontWeight: 600 }}>{o.orderNumber}</td>
+                    <td style={{ color: "var(--muted)" }}>
+                      {o.items.slice(0, 2).map((i) => i.name).join(", ")}
+                      {o.items.length > 2 ? ` +${o.items.length - 2}` : ""}
+                    </td>
+                    <td className="mono" style={{ fontWeight: 600 }}>₹{o.total.toLocaleString("en-IN")}</td>
+                    <td><span className="badge">{o.payment}</span></td>
+                    <td style={{ display: "flex", alignItems: "center", gap: 5, color: "var(--muted)" }}>
+                      <Clock size={12} weight="regular" />
+                      <span className="mono">{new Date(o.createdAt).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}</span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
 

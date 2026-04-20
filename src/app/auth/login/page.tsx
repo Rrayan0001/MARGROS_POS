@@ -1,158 +1,269 @@
 "use client";
 
-import React, { useState } from "react";
-import Link from "next/link";
-import Image from "next/image";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { EnvelopeSimple, LockSimple, Eye, EyeSlash, ArrowRight } from "@phosphor-icons/react";
+import Link from "next/link";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
+import { Eye, EyeSlash, ShieldCheck } from "@phosphor-icons/react";
 
 function LoginContent() {
-  const router = useRouter();
   const { login } = useAuth();
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [showPass, setShowPass] = useState(false);
+  const [showPw, setShowPw] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
     if (!email || !password) { setError("Please fill in all fields."); return; }
     setLoading(true);
-    const result = await login(email, password);
-    setLoading(false);
-    if (result.success) router.push("/dashboard");
-    else setError(result.error ?? "Invalid email or password.");
+    setError("");
+    try {
+      await login(email, password);
+      router.push("/dashboard");
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Login failed";
+      setError(msg || "Invalid email or password.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div className="auth-page">
-      {/* Brand panel */}
-      <div className="auth-brand">
-        <div className="auth-brand-content">
-          <Image src="/logo.png" alt="MARGROS POS" width={90} height={90} style={{ objectFit: "contain" }} />
-          <h2 className="auth-brand-name">MARGROS POS</h2>
-          <p className="auth-brand-tagline">Smart Billing for Smart Restaurants</p>
-          <div className="auth-brand-features">
+      {/* LEFT PANEL */}
+      <div className="auth-left">
+        <div className="auth-left-inner">
+          <div className="auth-wordmark">
+            <div className="auth-mark">M</div>
+            <div>
+              <p className="auth-brand">MARGROS</p>
+              <p className="auth-brand-sub">POS Platform · v2.6</p>
+            </div>
+          </div>
+
+          <div className="auth-hero">
+            <p className="eyebrow" style={{ color: "rgba(250,250,250,0.4)", marginBottom: 24 }}>Restaurant Intelligence</p>
+            <h1 className="h1" style={{ color: "#fff", fontSize: 60, letterSpacing: "-0.04em", lineHeight: 0.9 }}>
+              The POS<br />
+              <em style={{ fontStyle: "italic", color: "rgba(250,250,250,0.5)" }}>built for</em><br />
+              restaurants.
+            </h1>
+            <p style={{ color: "rgba(250,250,250,0.45)", fontSize: 14, marginTop: 32, lineHeight: 1.7, maxWidth: 340, fontFamily: "var(--mono)", letterSpacing: "0.04em" }}>
+              Fast billing · Smart analytics<br />AI-powered menu onboarding
+            </p>
+          </div>
+
+          <div className="auth-stats">
             {[
-              { icon: "⚡", text: "Instant order processing" },
-              { icon: "📊", text: "Real-time analytics" },
-              { icon: "🤖", text: "AI-powered menu upload" },
-              { icon: "🔒", text: "Secure & reliable" },
-            ].map((f) => (
-              <div key={f.text} className="auth-feature-item">
-                <span>{f.icon}</span>
-                <span>{f.text}</span>
+              { v: "2 900+", l: "Transactions/day" },
+              { v: "99.9%", l: "Uptime SLA" },
+              { v: "< 0.8s", l: "Avg bill time" },
+            ].map((s) => (
+              <div key={s.v} className="auth-stat">
+                <p className="auth-stat-v">{s.v}</p>
+                <p className="auth-stat-l">{s.l}</p>
               </div>
             ))}
           </div>
+
+          {/* Compliance */}
+          <div style={{ marginTop: "auto", paddingTop: 32 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+              <ShieldCheck size={13} color="rgba(250,250,250,0.3)" />
+              <p style={{ fontFamily: "var(--mono)", fontSize: 9.5, color: "rgba(250,250,250,0.3)", letterSpacing: "0.18em", textTransform: "uppercase" }}>
+                SOC 2 · ISO 27001 · PCI DSS
+              </p>
+            </div>
+            <p style={{ fontFamily: "var(--mono)", fontSize: 9, color: "rgba(250,250,250,0.18)", letterSpacing: "0.1em" }}>
+              © {new Date().getFullYear()} MARGROS. All rights reserved.
+            </p>
+          </div>
         </div>
-        <div className="auth-brand-orb" />
+
+        {/* Big decorative M */}
+        <div className="auth-bg-letter">M</div>
       </div>
 
-      {/* Form panel */}
-      <div className="auth-form-panel">
-        <div className="auth-form-box">
-          <div className="auth-form-header">
-            <h1 className="auth-title">Welcome back 👋</h1>
-            <p className="auth-subtitle">Sign in to your MARGROS POS account</p>
+      {/* RIGHT PANEL */}
+      <div className="auth-right">
+        <div className="auth-form-wrap">
+          <div style={{ marginBottom: 36 }}>
+            <p className="eyebrow" style={{ marginBottom: 12 }}>Sign In</p>
+            <h2 className="h2" style={{ letterSpacing: "-0.02em", fontWeight: 600 }}>Welcome back.</h2>
+            <p className="muted" style={{ marginTop: 8, fontSize: 14 }}>
+              Enter your credentials to access the POS system.
+            </p>
           </div>
 
-          {error && <div className="auth-error">{error}</div>}
-
-          <form onSubmit={handleSubmit} className="auth-form">
+          <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 18 }}>
             <div className="form-group">
-              <label className="form-label">Email Address</label>
-              <div className="form-input-icon">
-                <EnvelopeSimple size={16} weight="regular" className="input-icon" />
-                <input
-                  id="login-email"
-                  type="email"
-                  className="form-input"
-                  placeholder="admin@margros.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  autoComplete="email"
-                />
-              </div>
+              <label htmlFor="email" className="form-label">Email address</label>
+              <input
+                id="email"
+                type="email"
+                className={`form-input${error ? " error" : ""}`}
+                placeholder="you@margros.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                autoComplete="email"
+                autoFocus
+              />
             </div>
 
             <div className="form-group">
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <label className="form-label">Password</label>
-                <a href="#" style={{ fontSize: 12, color: "var(--primary)", fontWeight: 600 }}>Forgot password?</a>
-              </div>
-              <div className="form-input-icon" style={{ position: "relative" }}>
-                <LockSimple size={16} weight="regular" className="input-icon" />
+              <label htmlFor="password" className="form-label">Password</label>
+              <div style={{ position: "relative" }}>
                 <input
-                  id="login-password"
-                  type={showPass ? "text" : "password"}
-                  className="form-input"
-                  placeholder="Enter your password"
+                  id="password"
+                  type={showPw ? "text" : "password"}
+                  className={`form-input${error ? " error" : ""}`}
+                  placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  autoComplete="current-password"
                   style={{ paddingRight: 44 }}
                 />
                 <button
                   type="button"
-                  onClick={() => setShowPass(!showPass)}
-                  style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "var(--gray)", padding: 2 }}
+                  onClick={() => setShowPw((s) => !s)}
+                  style={{
+                    position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)",
+                    background: "none", border: "none", cursor: "pointer", color: "var(--muted)",
+                    display: "flex", alignItems: "center",
+                  }}
                 >
-                  {showPass ? <EyeSlash size={16} weight="regular" /> : <Eye size={16} weight="regular" />}
+                  {showPw ? <EyeSlash size={16} /> : <Eye size={16} />}
                 </button>
               </div>
             </div>
 
-            <button id="login-submit" type="submit" className="btn btn-primary w-full btn-lg" disabled={loading}>
+            {error && (
+              <p className="form-error">{error}</p>
+            )}
+
+            <button
+              type="submit"
+              className="btn btn-primary btn-lg"
+              disabled={loading}
+              style={{ width: "100%", marginTop: 4 }}
+            >
               {loading ? (
-                <><span className="loader" />Signing in…</>
-              ) : (
-                <><span style={{ fontWeight: 700 }}>Sign In</span> <ArrowRight size={16} weight="bold" /></>
-              )}
+                <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <span className="loader" />
+                  Signing in…
+                </span>
+              ) : "Sign in →"}
             </button>
           </form>
 
-          <p className="auth-switch">
-            Don&apos;t have an account?{" "}
-            <Link href="/auth/signup" style={{ color: "var(--primary)", fontWeight: 700 }}>
-              Get started free
-            </Link>
-          </p>
+          <div style={{ marginTop: 32, textAlign: "center" }}>
+            <p style={{ fontFamily: "var(--mono)", fontSize: 11, color: "var(--muted)", letterSpacing: "0.08em" }}>
+              Don&apos;t have an account?{" "}
+              <Link href="/auth/signup" style={{ color: "var(--ink)", fontWeight: 600, textDecoration: "underline", textUnderlineOffset: 3 }}>
+                Create one
+              </Link>
+            </p>
+          </div>
+
+          {/* Bottom strip */}
+          <div style={{ marginTop: "auto", paddingTop: 40 }}>
+            <div style={{ borderTop: "1px solid var(--line)", paddingTop: 20 }}>
+              <p style={{ fontFamily: "var(--mono)", fontSize: 9.5, color: "var(--muted)", letterSpacing: "0.14em", textTransform: "uppercase", textAlign: "center" }}>
+                Secured · Encrypted · GDPR Compliant
+              </p>
+            </div>
+          </div>
         </div>
       </div>
 
-      <style jsx>{`
-        .auth-page { min-height: 100vh; display: grid; grid-template-columns: 45% 55%; }
-        .auth-brand { background: linear-gradient(135deg, #0D1117 0%, #1A1A2E 60%, #16213E 100%); padding: 60px 48px; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; }
-        .auth-brand-orb { position: absolute; width: 400px; height: 400px; border-radius: 50%; background: rgba(242,106,33,0.1); filter: blur(80px); bottom: -100px; right: -100px; animation: float 6s ease-in-out infinite; }
-        .auth-brand-content { position: relative; z-index: 2; display: flex; flex-direction: column; gap: 20px; animation: fadeUp 0.7s ease both; }
-        .auth-brand-name { font-family: var(--font-heading); font-size: 32px; font-weight: 900; color: white; letter-spacing: 0.04em; }
-        .auth-brand-tagline { font-size: 16px; color: rgba(255,255,255,0.55); line-height: 1.5; }
-        .auth-brand-features { display: flex; flex-direction: column; gap: 12px; margin-top: 8px; }
-        .auth-feature-item { display: flex; align-items: center; gap: 12px; font-size: 14px; color: rgba(255,255,255,0.7); font-weight: 500; }
-        .auth-form-panel { display: flex; align-items: center; justify-content: center; padding: 40px 32px; background: var(--cream); }
-        .auth-form-box { width: 100%; max-width: 400px; display: flex; flex-direction: column; gap: 24px; animation: fadeUp 0.6s ease both; }
-        .auth-form-header { display: flex; flex-direction: column; gap: 6px; }
-        .auth-title { font-family: var(--font-heading); font-size: 28px; font-weight: 800; color: var(--charcoal); }
-        .auth-subtitle { font-size: 14px; color: var(--gray); }
-        .auth-error { background: #FEF2F2; border: 1px solid #FECACA; border-radius: var(--radius-md); padding: 12px 16px; font-size: 13px; color: #DC2626; font-weight: 500; }
-        .auth-form { display: flex; flex-direction: column; gap: 18px; }
-        .auth-switch { text-align: center; font-size: 13px; color: var(--gray); }
-        .loader { width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.7s linear infinite; display: inline-block; }
-        @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-12px)} }
-        @keyframes spin { to{transform:rotate(360deg)} }
-        @keyframes fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
-        @media (max-width: 768px) {
-          .auth-page { grid-template-columns: 1fr; }
-          .auth-brand { display: none; }
-          .auth-form-panel { padding: 28px 20px; align-items: flex-start; padding-top: 40px; }
-          .auth-form-box { gap: 20px; }
-          .auth-title { font-size: 24px; }
+      <style>{`
+        .auth-page {
+
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          min-height: 100vh;
         }
-        @media (max-width: 400px) {
-          .auth-form-panel { padding: 24px 16px; }
+        .auth-left {
+          background: var(--ink);
+          position: relative;
+          overflow: hidden;
+          padding: 48px;
+          display: flex;
+          flex-direction: column;
+        }
+        .auth-left-inner {
+          position: relative;
+          z-index: 2;
+          display: flex;
+          flex-direction: column;
+          height: 100%;
+        }
+        .auth-wordmark {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          margin-bottom: auto;
+          padding-bottom: 48px;
+        }
+        .auth-mark {
+          width: 32px; height: 32px;
+          border: 1.5px solid rgba(250,250,250,0.25);
+          display: grid; place-items: center;
+          font-family: var(--mono); font-size: 14px; font-weight: 600;
+          color: #fff; letter-spacing: -0.02em;
+        }
+        .auth-brand {
+          font-family: var(--mono); font-size: 13px; font-weight: 800;
+          color: #fff; letter-spacing: 0.2em; line-height: 1;
+        }
+        .auth-brand-sub {
+          font-family: var(--mono); font-size: 9px; color: rgba(250,250,250,0.35);
+          letter-spacing: 0.18em; text-transform: uppercase; margin-top: 3px;
+        }
+        .auth-hero { padding: 60px 0 48px; }
+        .auth-stats {
+          display: grid; grid-template-columns: repeat(3,1fr);
+          border: 1px solid rgba(250,250,250,0.1);
+        }
+        .auth-stat {
+          padding: 18px;
+          border-right: 1px solid rgba(250,250,250,0.1);
+        }
+        .auth-stat:last-child { border-right: none; }
+        .auth-stat-v {
+          font-family: var(--mono); font-size: 20px; font-weight: 600;
+          color: #fff; letter-spacing: -0.03em; line-height: 1;
+        }
+        .auth-stat-l {
+          font-family: var(--mono); font-size: 9.5px; color: rgba(250,250,250,0.35);
+          letter-spacing: 0.12em; text-transform: uppercase; margin-top: 4px;
+        }
+        .auth-bg-letter {
+          position: absolute;
+          bottom: -80px; right: -40px;
+          font-family: var(--sans); font-size: 400px; font-weight: 700;
+          color: rgba(255,255,255,0.025);
+          line-height: 1; user-select: none; pointer-events: none;
+          letter-spacing: -0.05em; z-index: 1;
+        }
+        .auth-right {
+          background: var(--bg-alt);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 48px;
+        }
+        .auth-form-wrap {
+          width: 100%; max-width: 380px;
+          display: flex; flex-direction: column; min-height: 520px;
+        }
+        @media (max-width: 900px) {
+          .auth-page { grid-template-columns: 1fr; }
+          .auth-left  { display: none; }
+          .auth-right { padding: 32px 20px; }
         }
       `}</style>
     </div>

@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect, useRef, ReactNode } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { usePathname } from "next/navigation";
 import {
   SquaresFour,
@@ -30,27 +29,26 @@ interface AppShellProps {
 }
 
 const NAV = [
-  { href: "/dashboard",    label: "Dashboard", Icon: SquaresFour, roles: ["admin", "manager"], color: "#F26A21" },
-  { href: "/billing",      label: "Billing",   Icon: Receipt,                                  color: "#4CAF50" },
-  { href: "/menu",         label: "Menu",      Icon: ForkKnife,   roles: ["admin", "manager"], color: "#0891B2" },
-  { href: "/reports",      label: "Reports",   Icon: ChartBar,    roles: ["admin", "manager"], color: "#D97706" },
-  { href: "/settings",     label: "Settings",  Icon: Gear,        roles: ["admin"],            color: "#64748B" },
+  { href: "/dashboard",    label: "Dashboard", Icon: SquaresFour, roles: ["admin", "manager"] },
+  { href: "/billing",      label: "Billing",   Icon: Receipt },
+  { href: "/menu",         label: "Menu",      Icon: ForkKnife,   roles: ["admin", "manager"] },
+  { href: "/reports",      label: "Reports",   Icon: ChartBar,    roles: ["admin", "manager"] },
+  { href: "/settings",     label: "Settings",  Icon: Gear,        roles: ["admin"] },
 ];
 
 const DRAWER_NAV = [
-  { href: "/dashboard",    label: "Dashboard", Icon: SquaresFour, roles: ["admin", "manager"], color: "#F26A21" },
-  { href: "/billing",      label: "Billing",   Icon: Receipt,                                  color: "#4CAF50" },
-  { href: "/menu",         label: "Menu",      Icon: ForkKnife,   roles: ["admin", "manager"], color: "#0891B2" },
-  { href: "/menu/ai-upload", label: "AI Upload", Icon: Sparkle,  roles: ["admin"],             color: "#7C3AED" },
-  { href: "/reports",      label: "Reports",   Icon: ChartBar,    roles: ["admin", "manager"], color: "#D97706" },
-  { href: "/settings",     label: "Settings",  Icon: Gear,        roles: ["admin"],            color: "#64748B" },
+  { href: "/dashboard",    label: "Dashboard", Icon: SquaresFour, roles: ["admin", "manager"] },
+  { href: "/billing",      label: "Billing",   Icon: Receipt },
+  { href: "/menu",         label: "Menu",      Icon: ForkKnife,   roles: ["admin", "manager"] },
+  { href: "/menu/ai-upload", label: "AI Upload", Icon: Sparkle,   roles: ["admin"] },
+  { href: "/reports",      label: "Reports",   Icon: ChartBar,    roles: ["admin", "manager"] },
+  { href: "/settings",     label: "Settings",  Icon: Gear,        roles: ["admin"] },
 ];
 
 export default function AppShell({ children, title, subtitle }: AppShellProps) {
   const [collapsed, setCollapsed] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [dark, setDark] = useState(false);
-  const [ripple, setRipple] = useState<number | null>(null);
   const [time, setTime] = useState("");
   const [date, setDate] = useState("");
   const rippleRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -59,7 +57,7 @@ export default function AppShell({ children, title, subtitle }: AppShellProps) {
 
   const sidebarW = collapsed ? 72 : 256;
 
-  // Live clock for drawer
+  // Live clock
   useEffect(() => {
     const tick = () => {
       const now = new Date();
@@ -90,6 +88,7 @@ export default function AppShell({ children, title, subtitle }: AppShellProps) {
     const next = !dark;
     setDark(next);
     document.documentElement.setAttribute("data-theme", next ? "dark" : "light");
+    document.documentElement.setAttribute("data-mode", next ? "dark" : "light");
   };
 
   const visibleNav = NAV.filter(
@@ -104,21 +103,21 @@ export default function AppShell({ children, title, subtitle }: AppShellProps) {
     (item) => pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href))
   );
 
-  const tap = (i: number) => {
-    setRipple(i);
-    if (rippleRef.current) clearTimeout(rippleRef.current);
-    rippleRef.current = setTimeout(() => setRipple(null), 600);
-  };
-
   useEffect(() => () => { if (rippleRef.current) clearTimeout(rippleRef.current); }, []);
 
-  const roleLabel = user?.role === "admin" ? "Admin" : user?.role === "manager" ? "Manager" : "Cashier";
+  const roleLabel = user?.role === "admin" ? "ADMIN" : user?.role === "manager" ? "MANAGER" : "CASHIER";
   const hour = new Date().getHours();
   const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
 
+  // Build breadcrumb from pathname
+  const crumbs = pathname
+    .split("/")
+    .filter(Boolean)
+    .map((s) => s.charAt(0).toUpperCase() + s.slice(1));
+
   return (
     <>
-      <div style={{ display: "flex", minHeight: "100vh", background: "var(--cream)" }}>
+      <div style={{ display: "flex", minHeight: "100vh", background: "var(--bg)" }}>
         {/* Desktop sidebar */}
         <div className="appshell-sidebar">
           <Sidebar collapsed={collapsed} />
@@ -130,22 +129,30 @@ export default function AppShell({ children, title, subtitle }: AppShellProps) {
           onClick={() => setCollapsed((c) => !c)}
           title={collapsed ? "Expand" : "Collapse"}
           style={{ left: sidebarW - 12 }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.background = "var(--primary)";
-            e.currentTarget.style.color = "white";
-            e.currentTarget.style.borderColor = "var(--primary)";
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = "var(--white)";
-            e.currentTarget.style.color = "var(--gray)";
-            e.currentTarget.style.borderColor = "var(--border)";
-          }}
         >
           {collapsed ? <CaretDoubleRight size={10} weight="bold" /> : <CaretDoubleLeft size={10} weight="bold" />}
         </button>
 
         {/* Main content */}
         <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0, overflow: "hidden" }}>
+
+          {/* ── Desktop Topbar ── */}
+          <div className="appshell-desktop-topbar">
+            <div className="breadcrumb">
+              <span>MARGROS</span>
+              <span className="sep">/</span>
+              {crumbs.map((c, i) => (
+                <React.Fragment key={i}>
+                  {i < crumbs.length - 1
+                    ? <><span>{c}</span><span className="sep">/</span></>
+                    : <span className="cur">{c}</span>
+                  }
+                </React.Fragment>
+              ))}
+            </div>
+            <div className="topbar-right">
+            </div>
+          </div>
 
           {/* ── Mobile top navbar ── */}
           <div className="appshell-topbar">
@@ -158,34 +165,37 @@ export default function AppShell({ children, title, subtitle }: AppShellProps) {
               <List size={22} weight="bold" />
             </button>
 
-            {/* Logo → Dashboard */}
+            {/* Wordmark */}
             <Link href="/dashboard" className="appshell-topbar-logo">
               <div style={{
-                width: 32, height: 32, borderRadius: 9,
-                background: "rgba(242,106,33,0.1)",
-                border: "1.5px solid rgba(242,106,33,0.25)",
+                width: 28, height: 28, border: "1.5px solid var(--ink)",
                 display: "flex", alignItems: "center", justifyContent: "center",
+                fontFamily: "var(--mono)", fontSize: 13, fontWeight: 600,
+                letterSpacing: "-0.02em", color: "var(--ink)", position: "relative",
               }}>
-                <Image src="/logo.png" alt="MARGROS" width={20} height={20} style={{ objectFit: "contain" }} />
+                M
               </div>
               <div>
-                <p style={{ fontFamily: "var(--font-heading)", fontSize: 13, fontWeight: 900, color: "var(--charcoal)", letterSpacing: "0.06em", lineHeight: 1 }}>MARGROS</p>
-                <p style={{ fontSize: 8, fontWeight: 700, color: "var(--primary)", letterSpacing: "0.1em", textTransform: "uppercase", marginTop: 2 }}>POS Platform</p>
+                <p style={{ fontFamily: "var(--mono)", fontSize: 12, fontWeight: 800, color: "var(--ink)", letterSpacing: "0.18em", lineHeight: 1 }}>MARGROS</p>
+                <p style={{ fontFamily: "var(--mono)", fontSize: 9, color: "var(--muted)", letterSpacing: "0.2em", textTransform: "uppercase", marginTop: 2 }}>POS</p>
               </div>
             </Link>
 
             {/* Right actions */}
             <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <button
+                className="icon-btn"
+                onClick={toggleTheme}
+                aria-label="Toggle theme"
+                style={{ width: 34, height: 34 }}
+              >
+                {dark ? <Sun size={16} weight="fill" /> : <Moon size={16} weight="regular" />}
+              </button>
               {user && (
                 <div
                   onClick={() => setDrawerOpen(true)}
-                  style={{
-                    width: 32, height: 32, borderRadius: "50%",
-                    background: "linear-gradient(135deg, #F26A21, #FF8C4A)",
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    color: "white", fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: 13,
-                    cursor: "pointer",
-                  }}
+                  className="avatar"
+                  style={{ cursor: "pointer" }}
                 >
                   {user.name.charAt(0)}
                 </div>
@@ -193,14 +203,12 @@ export default function AppShell({ children, title, subtitle }: AppShellProps) {
             </div>
           </div>
 
-          {/* Desktop page title */}
+          {/* Desktop page title area */}
           <div className="appshell-page-title">
-            <h1 style={{ fontFamily: "var(--font-heading)", fontSize: 22, fontWeight: 800, color: "var(--charcoal)", lineHeight: 1.2 }}>
+            {subtitle && <div className="eyebrow" style={{ marginBottom: 8 }}>{subtitle}</div>}
+            <h1 className="h2" style={{ fontWeight: 600, letterSpacing: "-0.02em" }}>
               {title}
             </h1>
-            {subtitle && (
-              <p style={{ fontSize: 12, color: "var(--gray)", marginTop: 4, fontWeight: 500 }}>{subtitle}</p>
-            )}
           </div>
 
           <main className="appshell-main">{children}</main>
@@ -220,94 +228,79 @@ export default function AppShell({ children, title, subtitle }: AppShellProps) {
         {/* Drawer header */}
         <div style={{
           display: "flex", alignItems: "center", justifyContent: "space-between",
-          padding: "16px 18px", borderBottom: "1px solid var(--border)",
+          padding: "16px 18px", borderBottom: "1px solid var(--line)",
         }}>
           <Link href="/dashboard" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none" }} onClick={() => setDrawerOpen(false)}>
             <div style={{
-              width: 36, height: 36, borderRadius: 10,
-              background: "var(--primary-10)", border: "1.5px solid var(--primary-20)",
+              width: 28, height: 28, border: "1.5px solid var(--ink)",
               display: "flex", alignItems: "center", justifyContent: "center",
+              fontFamily: "var(--mono)", fontSize: 13, fontWeight: 600,
+              letterSpacing: "-0.02em", color: "var(--ink)",
             }}>
-              <Image src="/logo.png" alt="MARGROS" width={24} height={24} style={{ objectFit: "contain" }} />
+              M
             </div>
             <div>
-              <p style={{ fontFamily: "var(--font-heading)", fontSize: 15, fontWeight: 900, color: "var(--charcoal)", letterSpacing: "0.07em", lineHeight: 1 }}>MARGROS</p>
-              <p style={{ fontSize: 9, fontWeight: 700, color: "var(--primary)", letterSpacing: "0.1em", textTransform: "uppercase", marginTop: 3 }}>POS Platform</p>
+              <p style={{ fontFamily: "var(--mono)", fontSize: 13, fontWeight: 800, color: "var(--ink)", letterSpacing: "0.18em", lineHeight: 1 }}>MARGROS</p>
+              <p style={{ fontFamily: "var(--mono)", fontSize: 9, color: "var(--muted)", letterSpacing: "0.2em", textTransform: "uppercase", marginTop: 2 }}>POS Platform</p>
             </div>
           </Link>
           <button
             onClick={() => setDrawerOpen(false)}
-            style={{
-              width: 34, height: 34, borderRadius: 9,
-              background: "var(--gray-lighter)", border: "none", cursor: "pointer",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              color: "var(--gray)",
-            }}
+            className="icon-btn"
+            style={{ width: 32, height: 32 }}
           >
-            <X size={18} weight="bold" />
+            <X size={16} weight="bold" />
           </button>
         </div>
 
         {/* User greeting */}
         {user && (
-          <div style={{ padding: "16px 18px 14px", borderBottom: "1px solid var(--border)" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
-              <div style={{
-                width: 40, height: 40, borderRadius: "50%",
-                background: "linear-gradient(135deg, #F26A21, #FF8C4A)",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                color: "white", fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: 16,
-                flexShrink: 0,
-              }}>
+          <div style={{ padding: "16px 18px 14px", borderBottom: "1px solid var(--line)" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <div className="avatar" style={{ width: 38, height: 38, fontSize: 15, flexShrink: 0 }}>
                 {user.name.charAt(0)}
               </div>
-              <div>
-                <p style={{ fontSize: 14, fontWeight: 700, color: "var(--charcoal)" }}>{user.name}</p>
+              <div style={{ flex: 1 }}>
+                <p style={{ fontSize: 14, fontWeight: 600, color: "var(--ink)" }}>{user.name}</p>
                 <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 2 }}>
-                  <ShieldCheck size={11} weight="fill" color="var(--primary)" />
-                  <span style={{ fontSize: 11, fontWeight: 600, color: "var(--primary)" }}>{roleLabel}</span>
+                  <ShieldCheck size={11} weight="fill" color="var(--muted)" />
+                  <span style={{ fontFamily: "var(--mono)", fontSize: 10, color: "var(--muted)", letterSpacing: "0.14em" }}>{roleLabel}</span>
                 </div>
               </div>
-              <div style={{ marginLeft: "auto", textAlign: "right" }}>
-                <p style={{ fontFamily: "var(--font-heading)", fontSize: 18, fontWeight: 800, color: "var(--charcoal)", lineHeight: 1 }}>{time}</p>
-                <p style={{ fontSize: 10, color: "var(--gray)", marginTop: 2 }}>{date}</p>
+              <div style={{ textAlign: "right" }}>
+                <p style={{ fontFamily: "var(--mono)", fontSize: 16, fontWeight: 600, color: "var(--ink)", lineHeight: 1 }}>{time}</p>
+                <p style={{ fontFamily: "var(--mono)", fontSize: 10, color: "var(--muted)", marginTop: 2 }}>{date}</p>
               </div>
             </div>
-            <p style={{ fontSize: 11, color: "var(--gray)", fontWeight: 500 }}>
-              {greeting}, <strong style={{ color: "var(--primary)" }}>{user.name.split(" ")[0]}</strong> 👋
+            <p style={{ fontFamily: "var(--mono)", fontSize: 10, color: "var(--muted)", marginTop: 10, letterSpacing: "0.12em", textTransform: "uppercase" }}>
+              {greeting}, {user.name.split(" ")[0]}
             </p>
           </div>
         )}
 
         {/* Nav section label */}
-        <p style={{ fontSize: 9, fontWeight: 700, color: "var(--gray)", letterSpacing: "0.12em", textTransform: "uppercase", padding: "14px 20px 6px", opacity: 0.6 }}>Navigation</p>
+        <p style={{ fontFamily: "var(--mono)", fontSize: 9, fontWeight: 700, color: "var(--muted)", letterSpacing: "0.2em", textTransform: "uppercase", padding: "14px 20px 6px", opacity: 0.6 }}>Navigation</p>
 
         {/* Nav items */}
         <nav style={{ padding: "0 10px", display: "flex", flexDirection: "column", gap: 2 }}>
           {visibleDrawerNav.map((item) => {
             const active = pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href));
-            const r = parseInt(item.color.slice(1, 3), 16);
-            const g = parseInt(item.color.slice(3, 5), 16);
-            const b = parseInt(item.color.slice(5, 7), 16);
             return (
               <Link
                 key={item.href}
                 href={item.href}
                 style={{
                   display: "flex", alignItems: "center", gap: 12,
-                  padding: "11px 14px", borderRadius: 10,
-                  color: active ? item.color : "var(--gray)",
-                  background: active ? `rgba(${r},${g},${b},0.1)` : "transparent",
-                  boxShadow: active ? `inset 3px 0 0 ${item.color}` : "none",
-                  fontFamily: "var(--font-body)", fontSize: 14, fontWeight: active ? 700 : 500,
-                  textDecoration: "none", transition: "all 0.15s ease",
+                  padding: "10px 14px", borderRadius: "var(--radius)",
+                  color: active ? "var(--bg)" : "var(--ink-2)",
+                  background: active ? "var(--ink)" : "transparent",
+                  fontFamily: "var(--sans)", fontSize: 14,
+                  fontWeight: active ? 600 : 400,
+                  textDecoration: "none", transition: "background 120ms ease",
                 }}
               >
-                <item.Icon size={20} weight={active ? "fill" : "regular"} />
+                <item.Icon size={18} weight={active ? "fill" : "regular"} />
                 <span style={{ flex: 1 }}>{item.label}</span>
-                {active && (
-                  <span style={{ width: 6, height: 6, borderRadius: "50%", background: item.color, boxShadow: `0 0 6px rgba(${r},${g},${b},0.6)` }} />
-                )}
               </Link>
             );
           })}
@@ -317,23 +310,21 @@ export default function AppShell({ children, title, subtitle }: AppShellProps) {
         <div style={{ flex: 1 }} />
 
         {/* Utility actions */}
-        <div style={{ borderTop: "1px solid var(--border)", padding: "10px 10px 6px" }}>
+        <div style={{ borderTop: "1px solid var(--line)", padding: "10px 10px 6px" }}>
           <button
             onClick={toggleTheme}
             style={{
               display: "flex", alignItems: "center", gap: 12,
-              padding: "11px 14px", borderRadius: 10, width: "100%",
+              padding: "10px 14px", borderRadius: "var(--radius)", width: "100%",
               background: "transparent", border: "none", cursor: "pointer",
-              color: "var(--gray)", fontFamily: "var(--font-body)", fontSize: 14, fontWeight: 500,
-              transition: "all 0.15s ease",
+              color: "var(--muted)", fontFamily: "var(--sans)", fontSize: 14, fontWeight: 400,
             }}
-            onMouseEnter={(e) => { e.currentTarget.style.background = "var(--gray-lighter)"; e.currentTarget.style.color = "var(--charcoal)"; }}
-            onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "var(--gray)"; }}
           >
-            <span style={{ display: "flex" }}>{dark ? <Sun size={20} weight="fill" color="#F59E0B" /> : <Moon size={20} weight="regular" />}</span>
+            <span style={{ display: "flex" }}>
+              {dark ? <Sun size={18} weight="fill" /> : <Moon size={18} weight="regular" />}
+            </span>
             <span>{dark ? "Light Mode" : "Dark Mode"}</span>
           </button>
-
         </div>
 
         {/* Logout */}
@@ -342,75 +333,43 @@ export default function AppShell({ children, title, subtitle }: AppShellProps) {
           style={{
             display: "flex", alignItems: "center", gap: 10,
             padding: "13px 24px", width: "100%",
-            background: "none", border: "none", borderTop: "1px solid var(--border)",
-            cursor: "pointer", color: "var(--gray)",
-            fontFamily: "var(--font-body)", fontSize: 14, fontWeight: 500,
-            transition: "color 0.15s ease, background 0.15s ease",
+            background: "none", border: "none", borderTop: "1px solid var(--line)",
+            cursor: "pointer", color: "var(--muted)",
+            fontFamily: "var(--sans)", fontSize: 14, fontWeight: 400,
           }}
-          onMouseEnter={(e) => { e.currentTarget.style.color = "#EF4444"; e.currentTarget.style.background = "rgba(239,68,68,0.08)"; }}
-          onMouseLeave={(e) => { e.currentTarget.style.color = "var(--gray)"; e.currentTarget.style.background = "none"; }}
         >
-          <SignOut size={17} weight="regular" />
+          <SignOut size={16} weight="regular" />
           <span>Log out</span>
         </button>
       </div>
 
-      {/* ── iOS-style bottom nav (mobile) ── */}
+      {/* ── Mobile bottom nav ── */}
       <div className="appshell-bn-wrap">
         <nav className="appshell-bn-bar">
-
           {visibleNav.map((item, i) => {
             const active = i === activeIdx;
             return (
               <Link
                 key={item.href}
                 href={item.href}
-                onClick={() => tap(i)}
                 style={{
                   flex: 1, display: "flex", flexDirection: "column",
                   alignItems: "center", justifyContent: "center",
-                  gap: 3, textDecoration: "none", position: "relative",
+                  gap: 4, textDecoration: "none", position: "relative",
                   zIndex: 1, padding: "6px 2px",
                   WebkitTapHighlightColor: "transparent", userSelect: "none",
-                  transform: active ? "translateY(-2px) scale(1.04)" : "scale(1)",
-                  transition: "transform 0.3s cubic-bezier(0.34,1.56,0.64,1)",
                 }}
               >
-                {/* Ripple */}
-                {ripple === i && (
-                  <span style={{
-                    position: "absolute", top: "50%", left: "50%",
-                    width: 60, height: 60, borderRadius: "50%",
-                    background: item.color, opacity: 0,
-                    transform: "translate(-50%,-50%) scale(0)",
-                    animation: "appshellRipple 0.5s cubic-bezier(0.22,1,0.36,1) forwards",
-                    pointerEvents: "none", zIndex: 0,
-                  }} />
-                )}
-
-                {/* Icon */}
+                <item.Icon
+                  size={21}
+                  weight={active ? "fill" : "regular"}
+                  color={active ? "var(--ink)" : "var(--muted)"}
+                />
                 <span style={{
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  width: 32, height: 26, position: "relative", zIndex: 1,
-                  transform: active ? "scale(1.18)" : "scale(1)",
-                  transition: "transform 0.35s cubic-bezier(0.34,1.56,0.64,1)",
-                }}>
-                  <item.Icon
-                    size={21}
-                    weight={active ? "fill" : "regular"}
-                    color={active ? item.color : "var(--gray)"}
-                  />
-                </span>
-
-                {/* Label */}
-                <span style={{
-                  fontSize: 9.5, fontWeight: active ? 700 : 500,
-                  fontFamily: "var(--font-body)",
-                  letterSpacing: "0.01em", whiteSpace: "nowrap",
-                  position: "relative", zIndex: 1,
-                  color: active ? item.color : "var(--gray)",
-                  transform: active ? "scale(1.05)" : "scale(1)",
-                  transition: "color 0.2s ease, transform 0.3s cubic-bezier(0.34,1.56,0.64,1)",
+                  fontFamily: "var(--mono)",
+                  fontSize: 9, fontWeight: active ? 700 : 400,
+                  letterSpacing: "0.08em", textTransform: "uppercase",
+                  color: active ? "var(--ink)" : "var(--muted)",
                 }}>
                   {item.label}
                 </span>
@@ -423,42 +382,57 @@ export default function AppShell({ children, title, subtitle }: AppShellProps) {
       <style>{`
         /* ── Desktop defaults ── */
         .appshell-sidebar    { display: flex; flex-shrink: 0; }
-        .appshell-main       { padding: 20px 28px 28px; flex: 1; }
-        .appshell-page-title { padding: 24px 28px 0; flex-shrink: 0; }
+        .appshell-main       { padding: 28px 56px 56px; flex: 1; }
+        .appshell-page-title { padding: 32px 56px 0; flex-shrink: 0; }
         .appshell-topbar     { display: none; }
         .appshell-bn-wrap    { display: none; }
         .appshell-backdrop   { display: none; }
         .appshell-drawer     { display: none; }
 
+        .appshell-desktop-topbar {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 0 56px;
+          height: 56px;
+          border-bottom: 1px solid var(--line);
+          position: sticky;
+          top: 0;
+          background: color-mix(in srgb, var(--bg) 92%, transparent);
+          backdrop-filter: blur(8px);
+          -webkit-backdrop-filter: blur(8px);
+          z-index: 10;
+          flex-shrink: 0;
+        }
+
         .appshell-toggle {
-          position: fixed; top: 20px;
+          position: fixed; top: 24px;
           width: 24px; height: 24px; border-radius: 50%;
-          background: var(--white); border: 1.5px solid var(--border);
+          background: var(--bg); border: 1px solid var(--line);
           display: flex; align-items: center; justify-content: center;
-          cursor: pointer; color: var(--gray);
-          box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+          cursor: pointer; color: var(--muted);
           z-index: 200;
-          transition: left 0.25s ease, background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+          transition: left 0.25s ease;
           padding: 0;
         }
+        .appshell-toggle:hover { background: var(--chip); border-color: var(--ink); color: var(--ink); }
 
         /* ── Mobile ── */
         @media (max-width: 768px) {
-          .appshell-sidebar    { display: none !important; }
-          .appshell-toggle     { display: none !important; }
-          .appshell-page-title { display: none; }
-          .appshell-main       { padding: 14px 14px 100px !important; }
+          .appshell-sidebar            { display: none !important; }
+          .appshell-toggle             { display: none !important; }
+          .appshell-desktop-topbar     { display: none !important; }
+          .appshell-page-title         { display: none; }
+          .appshell-main               { padding: 14px 16px 100px !important; }
 
           /* Top navbar */
           .appshell-topbar {
             display: flex;
             align-items: center;
-            height: 56px;
+            height: 52px;
             padding: 0 14px;
-            background: var(--white);
-            backdrop-filter: blur(20px) saturate(180%);
-            -webkit-backdrop-filter: blur(20px) saturate(180%);
-            border-bottom: 1px solid var(--border);
+            background: var(--bg);
+            border-bottom: 1px solid var(--line);
             gap: 10px;
             flex-shrink: 0;
             position: sticky;
@@ -467,10 +441,10 @@ export default function AppShell({ children, title, subtitle }: AppShellProps) {
           }
 
           .appshell-hamburger {
-            width: 36px; height: 36px; border-radius: 10px;
-            background: var(--gray-lighter); border: none;
+            width: 34px; height: 34px; border-radius: var(--radius);
+            background: var(--chip); border: 1px solid var(--line);
             display: flex; align-items: center; justify-content: center;
-            cursor: pointer; color: var(--charcoal); flex-shrink: 0;
+            cursor: pointer; color: var(--ink); flex-shrink: 0;
           }
 
           .appshell-topbar-logo {
@@ -478,18 +452,11 @@ export default function AppShell({ children, title, subtitle }: AppShellProps) {
             text-decoration: none; flex: 1;
           }
 
-          .appshell-topbar-btn {
-            width: 36px; height: 36px; border-radius: 10px;
-            background: var(--gray-lighter); border: none;
-            display: flex; align-items: center; justify-content: center;
-            cursor: pointer; color: var(--gray);
-          }
-
           /* Backdrop */
           .appshell-backdrop {
             display: block;
             position: fixed; inset: 0;
-            background: rgba(15,23,42,0.45);
+            background: rgba(0,0,0,0.5);
             backdrop-filter: blur(2px);
             z-index: 300;
             animation: backdropIn 0.2s ease forwards;
@@ -501,10 +468,10 @@ export default function AppShell({ children, title, subtitle }: AppShellProps) {
             flex-direction: column;
             position: fixed;
             top: 0; left: 0; bottom: 0;
-            width: min(320px, 88vw);
-            background: var(--white);
+            width: min(300px, 88vw);
+            background: var(--bg);
+            border-right: 1px solid var(--line);
             z-index: 400;
-            box-shadow: 4px 0 32px rgba(0,0,0,0.18);
             transform: translateX(-110%);
             transition: transform 0.32s cubic-bezier(0.32,0.72,0,1);
             overflow-y: auto;
@@ -524,31 +491,18 @@ export default function AppShell({ children, title, subtitle }: AppShellProps) {
           }
 
           .appshell-bn-bar {
-            margin: 0 12px 10px;
-            height: 64px;
-            background: var(--white);
-            backdrop-filter: blur(32px) saturate(180%);
-            -webkit-backdrop-filter: blur(32px) saturate(180%);
-            border: 1px solid var(--border);
-            border-radius: 9999px;
-            box-shadow:
-              0 10px 40px rgba(0,0,0,0.14),
-              0 2px 8px rgba(0,0,0,0.06);
+            margin: 0 0 0;
+            height: 60px;
+            background: var(--bg);
+            border-top: 1px solid var(--line);
             display: flex; align-items: center;
-            position: relative; overflow: hidden; padding: 0 6px;
+            position: relative; overflow: hidden; padding: 0 4px;
           }
-
         }
 
         @keyframes backdropIn {
           from { opacity: 0; }
           to   { opacity: 1; }
-        }
-
-        @keyframes appshellRipple {
-          0%   { transform: translate(-50%,-50%) scale(0);   opacity: 0.3; }
-          60%  { transform: translate(-50%,-50%) scale(1.6); opacity: 0.1; }
-          100% { transform: translate(-50%,-50%) scale(2.2); opacity: 0; }
         }
       `}</style>
     </>
