@@ -56,19 +56,6 @@ function LoginContent() {
             </p>
           </div>
 
-          <div className="auth-stats">
-            {[
-              { v: "2 900+", l: "Transactions/day" },
-              { v: "99.9%", l: "Uptime SLA" },
-              { v: "< 0.8s", l: "Avg bill time" },
-            ].map((s) => (
-              <div key={s.v} className="auth-stat">
-                <p className="auth-stat-v">{s.v}</p>
-                <p className="auth-stat-l">{s.l}</p>
-              </div>
-            ))}
-          </div>
-
           {/* Compliance */}
           <div style={{ marginTop: "auto", paddingTop: 32 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>

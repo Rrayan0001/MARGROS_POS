@@ -1,212 +1,108 @@
-"use client";
-
-import { useEffect, useState } from "react";
-import Link from "next/link";
 import Image from "next/image";
+import Link from "next/link";
+import styles from "./page.module.css";
+
+const metrics = [
+  { value: "01", label: "Single-screen billing flow" },
+  { value: "24/7", label: "Operational visibility" },
+  { value: "v2.6", label: "Current platform release" },
+];
 
 export default function WelcomePage() {
-  const [phase, setPhase] = useState(0);
-  const [hoverPrimary, setHoverPrimary] = useState(false);
-  const [hoverOutline, setHoverOutline] = useState(false);
-
-  useEffect(() => {
-    const timers = [
-      setTimeout(() => setPhase(1), 100),
-      setTimeout(() => setPhase(2), 350),
-      setTimeout(() => setPhase(3), 550),
-      setTimeout(() => setPhase(4), 750),
-      setTimeout(() => setPhase(5), 950),
-    ];
-    return () => timers.forEach(clearTimeout);
-  }, []);
-
-  const fade = (active: boolean) => ({
-    opacity: active ? 1 : 0,
-    transform: active ? "translateY(0px)" : "translateY(28px)",
-    transition: `opacity 0.6s cubic-bezier(0.22,1,0.36,1), transform 0.6s cubic-bezier(0.22,1,0.36,1)`,
-  });
-
   return (
-    <>
-      <div style={{
-        minHeight: "100vh",
-        background: "#0D1117",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        position: "relative",
-        overflow: "hidden",
-        padding: "60px 20px 80px",
-        fontFamily: "var(--font-poppins)",
-        boxSizing: "border-box",
-      }}>
-
-        {/* Content */}
-        <div style={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          gap: "28px",
-          maxWidth: "520px",
-          width: "100%",
-          textAlign: "center",
-          position: "relative",
-          zIndex: 2,
-        }}>
-
-          {/* Logo */}
-          <div style={{
-            ...fade(phase >= 1),
-            display: "inline-flex",
-            alignItems: "center",
-            justifyContent: "center",
-            animation: phase >= 1 ? "logoFloat 3.5s ease-in-out infinite 0.8s" : "none",
-          }}>
-            <Image
-              src="/logo.png"
-              alt="MARGROS POS"
-              width={140}
-              height={140}
-              style={{ objectFit: "contain", width: "clamp(90px, 30vw, 140px)", height: "auto" }}
-              priority
-            />
-          </div>
-
-          {/* Brand name */}
-          <div style={fade(phase >= 2)}>
-            <h1 style={{
-              fontFamily: "var(--font-poppins)",
-              fontSize: "clamp(34px, 11vw, 72px)",
-              fontWeight: 800,
-              color: "#ffffff",
-              letterSpacing: "-0.01em",
-              lineHeight: 1.05,
-              margin: 0,
-            }}>
-              <span style={{ color: "#D94E1F" }}>M</span>ARGROS{" "}
-              <span style={{ color: "#3DAB3A", letterSpacing: "0.05em" }}>POS</span>
-            </h1>
-          </div>
-
-          {/* Tagline */}
-          <p style={{
-            ...fade(phase >= 3),
-            fontSize: "clamp(13px, 3.8vw, 17px)",
-            color: "rgba(255,255,255,0.45)",
-            fontWeight: 400,
-            letterSpacing: "0.02em",
-            margin: "-14px 0 0",
-            lineHeight: 1.5,
-          }}>
-            Smart Billing for Smart Restaurants
-          </p>
-
-          {/* CTA Buttons */}
-          <div style={{
-            ...fade(phase >= 4),
-            display: "flex",
-            flexDirection: "column",
-            gap: "12px",
-            width: "100%",
-            maxWidth: "320px",
-          }}>
-            {/* Sign In */}
-            <Link
-              href="/auth/login"
-              onMouseEnter={() => setHoverPrimary(true)}
-              onMouseLeave={() => setHoverPrimary(false)}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: "10px",
-                padding: "15px 32px",
-                background: hoverPrimary ? "#bf4219" : "#D94E1F",
-                color: "#ffffff",
-                borderRadius: "12px",
-                fontSize: "16px",
-                fontWeight: 700,
-                fontFamily: "var(--font-poppins)",
-                textDecoration: "none",
-                border: "none",
-                letterSpacing: "0.02em",
-                cursor: "pointer",
-                transform: hoverPrimary ? "translateY(-2px)" : "translateY(0)",
-                transition: "all 0.2s ease",
-                width: "100%",
-                boxSizing: "border-box",
-              }}
-            >
-              Sign In
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M5 12h14M12 5l7 7-7 7" />
-              </svg>
-            </Link>
-
-            {/* Get Started Free */}
-            <Link
-              href="/auth/signup"
-              onMouseEnter={() => setHoverOutline(true)}
-              onMouseLeave={() => setHoverOutline(false)}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: "10px",
-                padding: "15px 32px",
-                background: hoverOutline ? "rgba(255,255,255,0.08)" : "transparent",
-                color: "#ffffff",
-                borderRadius: "12px",
-                fontSize: "16px",
-                fontWeight: 600,
-                fontFamily: "var(--font-poppins)",
-                textDecoration: "none",
-                border: `2px solid ${hoverOutline ? "#3DAB3A" : "rgba(61,171,58,0.5)"}`,
-                letterSpacing: "0.02em",
-                cursor: "pointer",
-                transform: hoverOutline ? "translateY(-2px)" : "translateY(0)",
-                transition: "all 0.2s ease",
-                width: "100%",
-                boxSizing: "border-box",
-              }}
-            >
-              Get Started Free
-            </Link>
-          </div>
-
-        </div>
-
-        {/* Footer */}
-        <div style={{
-          position: "absolute",
-          bottom: "20px",
-          left: "16px",
-          right: "16px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          flexWrap: "wrap",
-          gap: "6px",
-          fontSize: "11px",
-          color: "rgba(255,255,255,0.18)",
-          zIndex: 2,
-          letterSpacing: "0.03em",
-          textAlign: "center",
-        }}>
-          <span>© 2026 Margros Technologies</span>
-          <span>•</span>
-          <span>Smart. Fast. Reliable.</span>
-        </div>
-
+    <main className={styles.page}>
+      <div className={styles.backdrop} aria-hidden="true">
+        <div className={styles.grid} />
+        <div className={styles.glow} />
       </div>
 
-      <style>{`
-        @keyframes logoFloat {
-          0%, 100% { transform: translateY(0px); }
-          50%       { transform: translateY(-10px); }
-        }
-      `}</style>
-    </>
+      <section className={styles.shell}>
+        <header className={styles.header}>
+          <Link href="/" className={styles.wordmark} aria-label="MARGROS home">
+            <div className={styles.markFrame}>
+              <Image
+                src="/logo.png"
+                alt="MARGROS logo"
+                width={40}
+                height={40}
+                className={styles.headerLogo}
+                priority
+              />
+            </div>
+            <div>
+              <p className={styles.brand}>MARGROS</p>
+              <p className={styles.brandSub}>POS Platform</p>
+            </div>
+          </Link>
+
+          <div className={styles.headerActions}>
+            <Link href="/auth/login" className="btn btn-outline btn-sm">
+              Sign In
+            </Link>
+            <Link href="/auth/signup" className="btn btn-primary btn-sm">
+              Get Started
+            </Link>
+          </div>
+        </header>
+
+        <div className={styles.hero}>
+          <div className={styles.copy}>
+            <p className="eyebrow">Restaurant Intelligence</p>
+            <h1 className={styles.title}>
+              Smart billing, menu control, and restaurant operations in one{" "}
+              <span>editorial-grade workspace.</span>
+            </h1>
+
+            <div className={styles.ctas}>
+              <Link href="/auth/signup" className="btn btn-primary btn-lg">
+                Start Free
+              </Link>
+              <Link href="/auth/login" className="btn btn-outline btn-lg">
+                Continue to Sign In
+              </Link>
+            </div>
+          </div>
+
+          <aside className={styles.panel}>
+            <div className={`card card-padded ${styles.brandCard}`}>
+              <div className={styles.logoHalo} aria-hidden="true" />
+              <div className={styles.logoWrap}>
+                <Image
+                  src="/logo.png"
+                  alt="MARGROS POS logo"
+                  width={140}
+                  height={140}
+                  className={styles.logo}
+                  priority
+                />
+              </div>
+
+              <div className={styles.panelCopy}>
+                <p className="eyebrow">MARGROS POS</p>
+                <h2 className={styles.panelTitle}>Smart Billing for Smart Restaurants</h2>
+                <p className={styles.panelText}>
+                  The welcome experience now follows the same visual system as the
+                  dashboard, auth flow, and reporting surfaces.
+                </p>
+              </div>
+            </div>
+
+            <div className={styles.metrics}>
+              {metrics.map((metric) => (
+                <div key={metric.label} className={`card card-padded ${styles.metricCard}`}>
+                  <p className={styles.metricValue}>{metric.value}</p>
+                  <p className={styles.metricLabel}>{metric.label}</p>
+                </div>
+              ))}
+            </div>
+          </aside>
+        </div>
+
+        <footer className={styles.footer}>
+          <p>© 2026 Margros Technologies</p>
+          <p>Smart. Fast. Reliable.</p>
+        </footer>
+      </section>
+    </main>
   );
 }

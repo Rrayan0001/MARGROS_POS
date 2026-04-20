@@ -105,8 +105,9 @@ function SignupContent() {
             </div>
           </div>
 
-          <div style={{ marginTop: "auto" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          {/* Compliance */}
+          <div style={{ marginTop: "auto", paddingTop: 32 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
               <ShieldCheck size={13} color="rgba(250,250,250,0.3)" />
               <p style={{ fontFamily: "var(--mono)", fontSize: 9.5, color: "rgba(250,250,250,0.3)", letterSpacing: "0.18em", textTransform: "uppercase" }}>
                 SOC 2 · ISO 27001 · PCI DSS
