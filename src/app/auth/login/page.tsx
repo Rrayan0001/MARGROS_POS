@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
 import { ToastProvider, useToast } from "@/components/Toast";
-import { Eye, EyeSlash, ShieldCheck } from "@phosphor-icons/react";
+import { Eye, EyeSlash, ShieldCheck, WarningCircle } from "@phosphor-icons/react";
 
 function LoginContent() {
   const { login } = useAuth();
@@ -19,7 +19,10 @@ function LoginContent() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !password) { setError("Please fill in all fields."); return; }
+    if (!email || !password) { 
+      setError("Please fill in all fields."); 
+      return; 
+    }
     setLoading(true);
     setError("");
     
@@ -30,7 +33,6 @@ function LoginContent() {
     } else {
       const msg = result.error || "Invalid email or password.";
       setError(msg);
-      toast(msg, "error");
       setLoading(false);
     }
   };
@@ -88,7 +90,24 @@ function LoginContent() {
               Enter your credentials to access the POS system.
             </p>
           </div>
-
+          
+          {error && (
+            <div style={{ 
+              marginBottom: 20, 
+              padding: "12px 16px", 
+              background: "#FEF2F2", 
+              border: "1px solid #FCA5A5", 
+              borderRadius: "var(--radius-lg)",
+              display: "flex",
+              alignItems: "center",
+              gap: 12,
+              animation: "slideDown 0.3s ease"
+            }}>
+              <WarningCircle size={20} weight="fill" color="#EF4444" />
+              <p style={{ fontSize: 13, color: "#991B1B", fontWeight: 500 }}>{error}</p>
+            </div>
+          )}
+          
           <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 18 }}>
             <div className="form-group">
               <label htmlFor="email" className="form-label">Email address</label>
@@ -105,7 +124,23 @@ function LoginContent() {
             </div>
 
             <div className="form-group">
-              <label htmlFor="password" className="form-label">Password</label>
+              <div style={{ display: "flex", justifyContent: "between", alignItems: "center", marginBottom: 8 }}>
+                <label htmlFor="password" className="form-label" style={{ marginBottom: 0 }}>Password</label>
+                <Link 
+                  href="/auth/forgot-password" 
+                  style={{ 
+                    fontFamily: "var(--mono)", 
+                    fontSize: 10, 
+                    color: "var(--muted)", 
+                    letterSpacing: "0.05em", 
+                    textTransform: "uppercase",
+                    marginLeft: "auto"
+                  }}
+                  className="hover-underline"
+                >
+                  Forgot password?
+                </Link>
+              </div>
               <div style={{ position: "relative" }}>
                 <input
                   id="password"
@@ -130,10 +165,6 @@ function LoginContent() {
                 </button>
               </div>
             </div>
-
-            {error && (
-              <p className="form-error">{error}</p>
-            )}
 
             <button
               type="submit"
@@ -171,6 +202,10 @@ function LoginContent() {
       </div>
 
       <style>{`
+        @keyframes slideDown {
+          from { opacity: 0; transform: translateY(-10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
         .auth-page {
 
           display: grid;

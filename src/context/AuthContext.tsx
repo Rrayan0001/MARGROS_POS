@@ -24,6 +24,8 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   signup: (data: SignupData) => Promise<{ otpSent: boolean; error?: string }>;
   verifySignupOtp: (email: string, token: string, data: SignupData) => Promise<{ success: boolean; error?: string }>;
+  resetPassword: (email: string) => Promise<{ success: boolean; error?: string }>;
+  updatePassword: (password: string, accessToken: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
   isLoading: boolean;
 }
@@ -108,6 +110,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const resetPassword = useCallback(async (email: string): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const res = await fetch("/api/auth/reset-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      const json = await res.json();
+      if (!res.ok) return { success: false, error: json.error ?? "Failed to send reset email" };
+      return { success: true };
+    } catch {
+      return { success: false, error: "Something went wrong" };
+    }
+  }, []);
+
+  const updatePassword = useCallback(async (password: string, accessToken: string): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const res = await fetch("/api/auth/update-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password, accessToken }),
+      });
+      const json = await res.json();
+      if (!res.ok) return { success: false, error: json.error ?? "Failed to update password" };
+      return { success: true };
+    } catch {
+      return { success: false, error: "Something went wrong" };
+    }
+  }, []);
+
   const logout = useCallback(async () => {
     await fetch("/api/auth/logout", { method: "POST" });
     setUser(null);
@@ -115,7 +147,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [router]);
 
   return (
-    <AuthContext.Provider value={{ user, login, signup, verifySignupOtp, logout, isLoading }}>
+    <AuthContext.Provider value={{ user, login, signup, verifySignupOtp, resetPassword, updatePassword, logout, isLoading }}>
       {children}
     </AuthContext.Provider>
   );
