@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
+import WelcomeAnimationLayout from "@/components/WelcomeAnimationLayout";
 
 // Geist package not installed — use Inter (sans) and JetBrains Mono (mono) as equivalents
 const inter = Inter({
@@ -49,7 +50,9 @@ export default function RootLayout({
           } as React.CSSProperties
         }
       >
-        {children}
+        <WelcomeAnimationLayout>
+          {children}
+        </WelcomeAnimationLayout>
         <div className="grain-overlay" />
       </body>
     </html>

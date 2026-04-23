@@ -11,14 +11,22 @@ import { useAuth } from "@/context/AuthContext";
 import {
   BuildingOffice, Receipt, Users, PaintBrush, FloppyDisk, Plus, Trash,
   Sun, Moon, ShieldCheck, UserCircle, CheckCircle, XCircle, UploadSimple,
+  Printer, Bluetooth,
 } from "@phosphor-icons/react";
+import {
+  getPrintBridgeConfig,
+  savePrintBridgeConfig,
+  checkPrintBridge,
+  sendTestPrint,
+  type PrintBridgeConfig,
+} from "@/lib/printBridge";
 
 interface StaffMember {
   id: string; name: string; email: string;
   role: "admin" | "manager" | "cashier"; status: "active" | "inactive"; joined: string;
 }
 
-type SettingsTab = "profile" | "billing" | "staff" | "theme";
+type SettingsTab = "profile" | "billing" | "staff" | "theme" | "printing";
 
 function SettingsContent() {
   const { toast } = useToast();
@@ -32,6 +40,9 @@ function SettingsContent() {
   const [staff, setStaff] = useState<StaffMember[]>([]);
   const [addStaffOpen, setAddStaffOpen] = useState(false);
   const [newStaff, setNewStaff] = useState({ name: "", email: "", role: "cashier" });
+  const [printConfig, setPrintConfig] = useState<PrintBridgeConfig>(() => getPrintBridgeConfig());
+  const [bridgeChecking, setBridgeChecking] = useState(false);
+  const [bridgePrinting, setBridgePrinting] = useState(false);
 
   useEffect(() => {
     fetch("/api/settings/profile").then((r) => r.json()).then(({ restaurant }) => {
@@ -40,6 +51,10 @@ function SettingsContent() {
       }
     }).catch(() => toast("Failed to load profile", "error")).finally(() => setProfileLoading(false));
   }, [toast]);
+
+  useEffect(() => {
+    setPrintConfig(getPrintBridgeConfig());
+  }, []);
 
   const handleSaveProfile = async () => {
     setProfileSaving(true);
@@ -67,11 +82,41 @@ function SettingsContent() {
     toast(isDark ? "Dark mode enabled" : "Light mode enabled", "success");
   };
 
+  const savePrintingSettings = () => {
+    savePrintBridgeConfig(printConfig);
+    toast("Printing settings saved", "success");
+  };
+
+  const testBridgeConnection = async () => {
+    setBridgeChecking(true);
+    try {
+      const result = await checkPrintBridge(printConfig);
+      toast(result.ok ? `Bridge connected${result.printer ? ` · ${result.printer}` : ""}` : "Bridge responded with error", result.ok ? "success" : "error");
+    } catch {
+      toast("Could not reach bridge. Ensure it is running on your cashier device.", "error");
+    } finally {
+      setBridgeChecking(false);
+    }
+  };
+
+  const testBridgePrint = async () => {
+    setBridgePrinting(true);
+    try {
+      const result = await sendTestPrint(printConfig);
+      toast(result.ok ? "Test print sent" : "Test print failed", result.ok ? "success" : "error");
+    } catch {
+      toast("Test print failed. Check bridge URL and printer connection.", "error");
+    } finally {
+      setBridgePrinting(false);
+    }
+  };
+
   const tabs = [
     { id: "profile" as SettingsTab, label: "Restaurant Profile", Icon: BuildingOffice },
     { id: "billing" as SettingsTab, label: "Billing Settings", Icon: Receipt },
     { id: "staff" as SettingsTab, label: "Staff Management", Icon: Users },
     { id: "theme" as SettingsTab, label: "Appearance", Icon: PaintBrush },
+    { id: "printing" as SettingsTab, label: "Printing", Icon: Printer },
   ];
 
   return (
@@ -329,6 +374,87 @@ function SettingsContent() {
                     {darkMode === theme.id && <span className="badge solid">Active</span>}
                   </button>
                 ))}
+              </div>
+            </div>
+          )}
+
+          {tab === "printing" && (
+            <div className="card card-padded" style={{ animation: "fadeIn 0.3s ease" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 24 }}>
+                <div style={{ width: 40, height: 40, border: "1px solid var(--line)", display: "flex", alignItems: "center", justifyContent: "center" }}><Bluetooth size={20} weight="fill" /></div>
+                <div>
+                  <h2 style={{ fontSize: 18, fontWeight: 600, letterSpacing: "-0.01em" }}>Printer Bridge</h2>
+                  <p className="muted" style={{ fontSize: 13, marginTop: 2 }}>Connect billing to a local Bluetooth print bridge</p>
+                </div>
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+                <div className="form-group" style={{ gridColumn: "1 / -1" }}>
+                  <label className="form-label">Bridge URL</label>
+                  <input
+                    className="form-input"
+                    value={printConfig.bridgeUrl}
+                    onChange={(e) => setPrintConfig({ ...printConfig, bridgeUrl: e.target.value })}
+                    placeholder="http://127.0.0.1:4891"
+                  />
+                  <p style={{ fontSize: 11, color: "var(--muted)", marginTop: 4 }}>Run the print bridge on the cashier device at this URL.</p>
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Paper Width</label>
+                  <select className="form-input" value={printConfig.paperWidth} onChange={(e) => setPrintConfig({ ...printConfig, paperWidth: e.target.value as "58mm" | "80mm" })}>
+                    <option value="80mm">80mm</option>
+                    <option value="58mm">58mm</option>
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Printer Name <span style={{ fontFamily: "var(--sans)", fontSize: 10, color: "var(--muted)" }}>Optional</span></label>
+                  <input
+                    className="form-input"
+                    value={printConfig.printerName}
+                    onChange={(e) => setPrintConfig({ ...printConfig, printerName: e.target.value })}
+                    placeholder="Kitchen-Printer-1"
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginTop: 18 }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", border: "1px solid var(--line)", borderRadius: "var(--radius)", padding: "12px 14px" }}>
+                  <div>
+                    <p style={{ fontWeight: 600, fontSize: 13 }}>Enable Bridge Printing</p>
+                    <p style={{ fontSize: 11, color: "var(--muted)", marginTop: 2 }}>Use local bridge for print jobs</p>
+                  </div>
+                  <label className="toggle">
+                    <input type="checkbox" checked={printConfig.enabled} onChange={(e) => setPrintConfig({ ...printConfig, enabled: e.target.checked })} />
+                    <span className="toggle-track" />
+                    <span className="toggle-thumb" />
+                  </label>
+                </div>
+
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", border: "1px solid var(--line)", borderRadius: "var(--radius)", padding: "12px 14px" }}>
+                  <div>
+                    <p style={{ fontWeight: 600, fontSize: 13 }}>Auto Print After Order</p>
+                    <p style={{ fontSize: 11, color: "var(--muted)", marginTop: 2 }}>Print immediately when order completes</p>
+                  </div>
+                  <label className="toggle">
+                    <input type="checkbox" checked={printConfig.autoPrintAfterOrder} onChange={(e) => setPrintConfig({ ...printConfig, autoPrintAfterOrder: e.target.checked })} />
+                    <span className="toggle-track" />
+                    <span className="toggle-thumb" />
+                  </label>
+                </div>
+              </div>
+
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 18 }}>
+                <button className="btn btn-outline" onClick={testBridgeConnection} disabled={bridgeChecking} style={{ gap: 6 }}>
+                  <Bluetooth size={14} /> {bridgeChecking ? "Checking..." : "Test Connection"}
+                </button>
+                <button className="btn btn-outline" onClick={testBridgePrint} disabled={bridgePrinting || !printConfig.enabled} style={{ gap: 6 }}>
+                  <Printer size={14} /> {bridgePrinting ? "Sending..." : "Test Print"}
+                </button>
+                <button className="btn btn-primary" onClick={savePrintingSettings} style={{ gap: 6 }}>
+                  <FloppyDisk size={14} weight="fill" /> Save Printing Settings
+                </button>
               </div>
             </div>
           )}

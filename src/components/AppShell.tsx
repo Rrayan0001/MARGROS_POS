@@ -383,8 +383,8 @@ export default function AppShell({ children, title, subtitle }: AppShellProps) {
       <style>{`
         /* ── Desktop defaults ── */
         .appshell-sidebar    { display: flex; flex-shrink: 0; }
-        .appshell-main       { padding: 28px 56px 56px; flex: 1; }
-        .appshell-page-title { padding: 32px 56px 0; flex-shrink: 0; }
+        .appshell-main       { padding: 16px 56px 56px; flex: 1; }
+        .appshell-page-title { padding: 16px 56px 0; flex-shrink: 0; }
         .appshell-topbar     { display: none; }
         .appshell-bn-wrap    { display: none; }
         .appshell-backdrop   { display: none; }
