@@ -36,11 +36,7 @@ export default function WelcomeAnimationLayout({ children }: { children: ReactNo
   return (
     <>
       <motion.div
-        animate={
-          phase === "done"
-            ? { opacity: 1, scale: 1, filter: "blur(0px)" }
-            : { opacity: 0, scale: 0.985, filter: "blur(14px)" }
-        }
+        animate={phase === "done" ? { opacity: 1 } : { opacity: 0 }}
         transition={{ duration: 0.75, ease: "easeOut" }}
         style={{ minHeight: "100vh" }}
       >

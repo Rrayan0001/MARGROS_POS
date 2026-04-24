@@ -424,7 +424,7 @@ export default function AppShell({ children, title, subtitle }: AppShellProps) {
           .appshell-toggle             { display: none !important; }
           .appshell-desktop-topbar     { display: none !important; }
           .appshell-page-title         { display: none; }
-          .appshell-main               { padding: 14px 16px 100px !important; }
+          .appshell-main               { padding: 14px 16px calc(84px + env(safe-area-inset-bottom, 0px)) !important; }
 
           /* Top navbar */
           .appshell-topbar {
@@ -486,9 +486,11 @@ export default function AppShell({ children, title, subtitle }: AppShellProps) {
           /* Bottom nav */
           .appshell-bn-wrap {
             display: block;
-            position: fixed; bottom: 0; left: 0; right: 0;
-            z-index: 200;
+            position: fixed !important;
+            inset: auto 0 0 0;
+            z-index: 500;
             padding-bottom: env(safe-area-inset-bottom, 0px);
+            pointer-events: none;
           }
 
           .appshell-bn-bar {
@@ -498,6 +500,8 @@ export default function AppShell({ children, title, subtitle }: AppShellProps) {
             border-top: 1px solid var(--line);
             display: flex; align-items: center;
             position: relative; overflow: hidden; padding: 0 4px;
+            pointer-events: auto;
+            box-shadow: 0 -6px 18px rgba(0, 0, 0, 0.08);
           }
         }
 
